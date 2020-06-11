@@ -1,0 +1,20 @@
+
+-- view story
+https://www.instagram.com/graphql/query/?query_hash=xxxxxxxxxxx&variables={"reel_ids":[],"tag_names":[],"location_ids":[],"highlight_reel_ids":[],"precomposed_overlay":false,"show_story_viewer_list":true,"story_viewer_fetch_count":50,"story_viewer_cursor":"","stories_video_dash_manifest":false}
+
+-- story user
+https://www.instagram.com/graphql/query/?query_hash=0a85e6ea60a4c99edc58ab2f3d17cfdf&variables={"reel_ids":["4980057207","32038966","3076839612","4076385347","5849163466","2045413753","512642314","24379982","558220959","17529878112","21752138167","2000324496","9152963130","25123762554","4661771578","8334497908","1707552353","9136545575","16473604761","3144460515","3960258991","1980890571","295594452","3555900579","12526755978","1902418393","7103324554","1414270489","9004581125","5434982","3562762313","5857539428","2926890892","18046538962","3166281821","8218227775","3865511979","8495937009"],"tag_names":[],"location_ids":[],"highlight_reel_ids":[],"precomposed_overlay":false,"show_story_viewer_list":true,"story_viewer_fetch_count":50,"story_viewer_cursor":"","stories_video_dash_manifest":false}
+
+https://www.instagram.com/data/shared_data/
+
+auto view story
+
+
+https://instagram.com/api/v1/
+https://instagram.com/api/v1/feed/timeline/?min_id=
+https://instagram.com/api/v1/media/'.$media_id.'/'.$action.'/
+https://instagram.com/api/v1/media/' . $media->pk . '/like/
+
+-- web request
+https://www.instagram.com/graphql/query/?query_hash=c409f8bda63382c86db99f2a2ea4a9b2&variables=%7B%7D
+https://www.instagram.com/web/likes/$id/like/

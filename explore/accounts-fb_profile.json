@@ -1,0 +1,20 @@
+{
+	"pictureResponse": {
+		"data": {
+			"height": 100,
+			"is_silhouette": false,
+			"url": "https: \/\/scontent.xx.fbcdn.net\/v\/t1.0-1\/p100x100\/65307879_471865026719017_5286366118670237696_o.jpg?_nc_cat=108\u0026_nc_sid=0c64ff\u0026_nc_oc=AQnXfDS7zYuV4ck5h_UIoh5QBW1fAJ4FPpYiu8EV_xFvtPUAZkzvEwHUi7AmXfJdiupgeNU0tp9dgcVPIe4tk3Oe\u0026_nc_ht=scontent.xx\u0026_nc_tp=6\u0026oh=4c81f2386b5ed18fa1bfed2234143f86\u0026oe=5EFEF2B2",
+			"width": 100
+		}
+	},
+	"meResponse": {
+		"id": "100016865703374",
+		"name": "Riedayme",
+		"email": "programmer.irfaan@gmail.com"
+	},
+	"igAccount": {
+		"profilePictureUrl": "https: \/\/scontent-for1-1.cdninstagram.com\/v\/t51.2885-19\/44884218_345707102882519_2446069589734326272_n.jpg?_nc_ht=scontent-for1-1.cdninstagram.com\u0026_nc_ohc=8_uE6AH0S60AX-sYNxI\u0026oh=f16ff974bff0e37ff6b296bdebc75a07\u0026oe=5F03DA8F\u0026ig_cache_key=YW5vbnltb3VzX3Byb2ZpbGVfcGlj.2",
+		"username": "riedayme"
+	},
+	"status": "ok"
+}

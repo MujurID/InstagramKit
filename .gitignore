@@ -1,0 +1,8 @@
+#-------------------------
+# Composer
+#-------------------------
+#vendor/
+composer.lock
+
+# Log
+scripts/log/

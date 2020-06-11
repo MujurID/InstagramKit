@@ -1,0 +1,20 @@
+{
+    "name": "riedayme/instagramkit",
+    "description": "PHP Curl Instagram",
+    "type": "library",
+    "license": "CC-BY-4.0",
+    "minimum-stability": "dev",
+    "authors": [
+        {
+            "name": "riedayme",
+            "email": "programmer.irfaan@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Riedayme\\InstagramKit\\": "src/"
+        }
+    },
+    "require": {},
+    "require-dev": {}
+}
