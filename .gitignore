@@ -5,5 +5,5 @@
 composer.lock
 
 # Log
-scripts/log/
-!scripts/log/.gitkeep
+scripts/log/*
+!scripts/log/index.html
