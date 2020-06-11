@@ -6,3 +6,4 @@ composer.lock
 
 # Log
 scripts/log/
+!scripts/log/.gitkeep
