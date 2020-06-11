@@ -226,7 +226,7 @@ Class InstagramAutoViewStory
 	{		
 
 		$logfilename = "log/story-data-{$identity}";
-		$log_url = false;
+		$log_url = array();
 		if (file_exists($logfilename)) 
 		{
 			$log_url = file_get_contents($logfilename);
