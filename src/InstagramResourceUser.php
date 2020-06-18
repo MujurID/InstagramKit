@@ -78,14 +78,9 @@ Class InstagramResourceUser
 
 		$url = 'https://i.instagram.com/api/v1/accounts/current_user/';
 
-		$headers = array();
-		$headers[] = "X-Csrftoken: ".InstagramCookie::GetCSRFCookie($cookie);
-		$headers[] = "Cookie: ".$cookie;
-
 		$useragent = InstagramUserAgent::Get('Android');
 
-		$access = InstagramHelper::curl($url, false , $headers, false, $useragent);
-
+		$access = InstagramHelperAPI::curl($url, false , false, $cookie, $useragent);
 
 		return json_decode($access['body'],true);
 	}
@@ -97,13 +92,9 @@ Class InstagramResourceUser
 
 		$url = 'https://i.instagram.com/api/v1/users/' . $userid . '/info/';
 
-		$headers = array();
-		$headers[] = "X-Csrftoken: ".InstagramCookie::GetCSRFCookie($cookie);
-		$headers[] = "Cookie: ".$cookie;
-
 		$useragent = InstagramUserAgent::Get('Android');
 
-		$access = InstagramHelper::curl($url, false , $headers, false, $useragent);
+		$access = InstagramHelperAPI::curl($url, false , false, $cookie, $useragent);
 
 		return json_decode($access['body'],true);
 	}	
@@ -113,13 +104,9 @@ Class InstagramResourceUser
 
 		$url = 'https://i.instagram.com/api/v1/users/' . $username . '/usernameinfo';
 
-		$headers = array();
-		$headers[] = "X-Csrftoken: ".InstagramCookie::GetCSRFCookie($cookie);
-		$headers[] = "Cookie: ".$cookie;
-
 		$useragent = InstagramUserAgent::Get('Android');
 
-		$access = InstagramHelper::curl($url, false , $headers, false, $useragent);
+		$access = InstagramHelperAPI::curl($url, false , false, $cookie, $useragent);
 
 		return json_decode($access['body'],true);
 	}
@@ -140,16 +127,9 @@ Class InstagramResourceUser
 
 		$url = 'https://i.instagram.com/api/v1/friendships/'.$userid.'/followers/'.$parameters;
 
-		$headers = array();
-		$headers[] = "X-Csrftoken: ".InstagramCookie::GetCSRFCookie($cookie);
-		$headers[] = "Cookie: ".$cookie;
-
 		$useragent = InstagramUserAgent::Get('Android');
 
-		$access = InstagramHelper::curl($url, false , $headers, false, $useragent);
-
-		echo $access['body'];
-		exit;
+		$access = InstagramHelperAPI::curl($url, false , false, $cookie, $useragent);
 
 		return json_decode($access['body'],true);		
 	}

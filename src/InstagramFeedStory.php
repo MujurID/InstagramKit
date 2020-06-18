@@ -5,22 +5,20 @@ Class InstagramFeedStory
 
 	public $cookie;	
 	public $csrftoken;
+	public $useragent;
 
 	public $query_hash;	
 
 	public function SetCookie($data) 
 	{
 		$this->cookie = $data;
-	}
-
-	public function SetCSRF($data) 
-	{
-		$this->csrftoken = $data;
-	}
-
-	public function GetQueryHash() 
-	{
+		$this->csrftoken = InstagramCookie::GetCSRFCookie($data);
 		$this->query_hash = self::GetQueyHash();
+	}
+
+	public function SetUserAgent($data) 
+	{
+		$this->useragent = $data;
 	}
 
 	public function GetQueyHash()
@@ -36,11 +34,16 @@ Class InstagramFeedStory
 		$response =  $access['body'];
 
 		preg_match('/query_hash=([^\s]+)/', $response, $matches);
-		$query_hash = explode('=',$matches[0]);
-		$query_hash = explode('&amp',$query_hash[1]);
-		$query_hash = $query_hash[0];
 
-		return $query_hash;
+		if (!empty($matches)) {
+			$query_hash = explode('=',$matches[0]);
+			$query_hash = explode('&amp',$query_hash[1]);
+			$query_hash = $query_hash[0];
+
+			return $query_hash;
+		}else{
+			die('[ERROR] Tidak dapat mengambil query_hash');
+		}
 	}	
 
 	public function GetStoryList()
@@ -61,6 +64,7 @@ Class InstagramFeedStory
 			return self::ExtractStoryList($response);		
 		}else{
 			// Tidak dapat mengambil feed story list
+			// {"message": "invalid query_hash", "status": "fail"}
 			return false;
 		}
 	}	
@@ -116,6 +120,9 @@ Class InstagramFeedStory
 
 		$response = json_decode($access['body'],true);
 
+		// echo $access['body'];
+		// exit;
+
 		if ($response['status'] == 'ok' AND $response['data']['reels_media'] != null) {
 			return self::ExtractStoryUser($response);		
 		}else{
@@ -140,7 +147,59 @@ Class InstagramFeedStory
 				$type = ($story['is_video'] == false) ? 'image' : 'video';
 				$media = ($type == 'image') ? $story['display_url'] : $story['video_resources'][0]['src'];
 				$taken_at = $story['taken_at_timestamp'];
+
+				$extract[] = [
+					'id' => $id,
+					'userid' => $userid,				
+					'username' => $username,
+					'media' => $media,
+					'type' => $type,
+					'taken_at' => $taken_at
+				];
 			}
+
+		}
+
+		return $extract;
+	}
+
+	public function GetFeedStoryUserByAPI($userid)
+	{
+
+		$url = 'https://i.instagram.com/api/v1/feed/user/'.$userid.'/story/';
+
+		$access = InstagramHelperAPI::curl($url, false , false, $this->cookie, $this->useragent);
+
+		// echo $access['body'];
+		// exit;
+		
+		$response = json_decode($access['body'],true);
+
+		if ($response['status'] == 'ok' AND $response['reel'] != null) {
+			return self::ExtractStoryUserAPI($response);		
+		}else{
+			// Tidak dapat mengambil feed story user
+			return false;
+		}	
+	}	
+
+	public function ExtractStoryUserAPI($response)
+	{
+		$reels_media = $response['reel'];
+
+		$extract = array();
+
+		$userid = $reels_media['user']['pk'];
+		$username = $reels_media['user']['username'];
+
+		$items = $reels_media['items'];
+		foreach ($items as $story) {
+			$id = $story['pk'];
+			$type = ($story['media_type'] == '1') ? 'image' : 'video';
+			$media = ($type == 'image') ? $story['image_versions2']['candidates'][0]['url'] : $story['video_versions'][0]['url'];
+			$taken_at = $story['taken_at'];
+
+			/** get polling,question,and other here if exist */
 
 			$extract[] = [
 				'id' => $id,
@@ -153,5 +212,5 @@ Class InstagramFeedStory
 		}
 
 		return $extract;
-	}	
+	}
 }

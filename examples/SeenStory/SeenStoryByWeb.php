@@ -1,5 +1,5 @@
 <?php  
-require "../vendor/autoload.php";
+require "../../vendor/autoload.php";
 
 use Riedayme\InstagramKit\InstagramFeedStory;
 use Riedayme\InstagramKit\InstagramSeenStory;
@@ -7,13 +7,13 @@ use Riedayme\InstagramKit\InstagramSeenStory;
 $datacookie = 'yourcookie';
 
 $process = new InstagramFeedStory();
-$process->Auth($datacookie,'cookie');
-
-$StoryList = $process->GetStoryList();
+$process->SetCookie($datacookie);
+// $StoryList = $process->GetStoryList();
+$StoryList[] = ['id' => '13320596140'];
 $StoryUser = $process->GetStoryUser($StoryList);
 
 $seenstory = new InstagramSeenStory();
-$seenstory->Auth($datacookie,'cookie');
+$seenstory->SetCookie($datacookie);
 
 foreach ($StoryUser as $story) {
 	$results = $seenstory->SeenStoryByWeb($story);
@@ -22,3 +22,14 @@ foreach ($StoryUser as $story) {
 	echo "</pre>";
 	exit;
 }
+
+/*
+array(3) {
+  ["status"]=>
+  bool(true)
+  ["id"]=>
+  string(19) "2334166284923520094"
+  ["username"]=>
+  string(12) "fauzan121002"
+}
+*/

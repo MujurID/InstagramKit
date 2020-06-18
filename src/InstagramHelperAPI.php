@@ -3,6 +3,53 @@
 Class InstagramHelperAPI
 {
 
+	public static function curl($url, $postdata = 0, $header = 0, $cookie = 0, $useragent = 0) {
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_VERBOSE, false);
+		curl_setopt($ch, CURLOPT_HEADER, 1);
+		if($header) {
+			curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+			curl_setopt($ch, CURLOPT_ENCODING, "gzip");
+		}
+		if($postdata) {
+			curl_setopt($ch, CURLOPT_POST, 1);
+			if ($postdata != 'empty') {
+				curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
+			}
+		}
+
+		if($cookie) {
+			curl_setopt($ch, CURLOPT_COOKIE, $cookie);
+		}
+		if ($useragent) {
+			curl_setopt($ch, CURLOPT_USERAGENT, $useragent);
+		}
+
+		$response = curl_exec($ch);
+		$httpcode = curl_getinfo($ch);
+		if(!$httpcode) {
+			curl_close($ch);	
+			die("Response header not found"); 
+		}
+		else{
+
+			$header = substr($response, 0, curl_getinfo($ch, CURLINFO_HEADER_SIZE));
+			$body = substr($response, curl_getinfo($ch, CURLINFO_HEADER_SIZE));
+
+			curl_close($ch);
+
+			return [
+				'header' => $header,
+				'body' => $body
+			];
+		}
+	}	
+	
 	public static function generateDeviceId($seed)
 	{
 		$volatile_seed = filemtime(__DIR__);
@@ -30,7 +77,7 @@ Class InstagramHelperAPI
 			mt_rand(0, 0x0fff) | 0x4000,
 			mt_rand(0, 0x3fff) | 0x8000,
 			mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
-			);
+		);
 
 		return $type ? $uuid : str_replace('-', '', $uuid);
 	}

@@ -3,8 +3,11 @@ require "../../vendor/autoload.php";
 
 use Riedayme\InstagramKit\InstagramAuth;
 
-$username = 'riedayme';
-$password = 'igxrealig223366';
+// $username = 'riedayme';
+// $password = 'igxrealig223366';
+
+$username = 'username';
+$password = 'password';
 
 $auth = new InstagramAuth();
 
@@ -15,18 +18,20 @@ var_dump($results);
 echo "</pre>";
 
 /*
-array(6) {
+array(7) {
   ["userid"]=>
   int(31310607724)
   ["username"]=>
   string(8) "riedayme"
   ["photo"]=>
-  string(275) "https://scontent-sin6-2.cdninstagram.com/v/t51.2885-19/44884218_345707102882519_2446069589734326272_n.jpg?_nc_ht=scontent-sin6-2.cdninstagram.com&_nc_cat=1&_nc_ohc=ZMRBdU8i2AoAX_9sjIo&oh=3c5440bf24142156488d53209c369e95&oe=5F13AC8F&ig_cache_key=YW5vbnltb3VzX3Byb2ZpbGVfcGlj.2"
+  string(273) "https://instagram.fupg5-1.fna.fbcdn.net/v/t51.2885-19/44884218_345707102882519_2446069589734326272_n.jpg?_nc_ht=instagram.fupg5-1.fna.fbcdn.net&_nc_cat=1&_nc_ohc=ZMRBdU8i2AoAX_IErC2&oh=09a49dcd7d53d2c9b4edf1cb4f9df5bb&oe=5F13AC8F&ig_cache_key=YW5vbnltb3VzX3Byb2ZpbGVfcGlj.2"
   ["cookie"]=>
-  string(167) "ds_user=riedayme;csrftoken=8hRXfkii8DTkatrwf7A1QhjypwTBqTuq;rur=VLL;mid=XutfUQABAAEWtSdGnP72bNfrQ5uy;ds_user_id=31310607724;sessionid=31310607724%3AKWfh15Z5qspaGr%3A5;"
+  string(168) "ds_user=riedayme;csrftoken=vmESyfwhD29RHnpSmf5IpbLIz7MZXkdp;rur=VLL;mid=XuuCZwABAAHWql7NpTNNMz_8LD_P;ds_user_id=31310607724;sessionid=31310607724%3ARbatF6IHrMBxf1%3A19;"
   ["csrftoken"]=>
-  string(32) "8hRXfkii8DTkatrwf7A1QhjypwTBqTuq"
+  string(32) "vmESyfwhD29RHnpSmf5IpbLIz7MZXkdp"
   ["rank_token"]=>
-  string(48) "31310607724_75744ff5-2edc-488f-8608-2edec2b5c2af"
+  string(48) "31310607724_d4295d87-0db1-4c83-bb99-3d9aee0f719b"
+  ["useragent"]=>
+  string(94) "Instagram 9.6.0 Android (19/4.4.2; 480dpi; 1080x1920; samsung; SM-N900T; hltetmo; qcom; en_US)"
 }
 */

@@ -125,8 +125,6 @@ Class InstagramAuth
 
 		$login = InstagramHelper::curl($url, $postdata , $headers , false, $useragent);
 
-		// echo $login['body'];
-
 		$response = json_decode($login['body'],true);
 
 		if($response['status'] == 'ok') {
@@ -144,7 +142,9 @@ Class InstagramAuth
 			'photo' => $userinfo['photo'],
 			'cookie' => $cookie,
 			'csrftoken' => $csrftoken,
-			'rank_token' => $rank_token
+			'uuid' => $guid,
+			'rank_token' => $rank_token,
+			'useragent' => $useragent
 			];
 
 		}elseif ($response['error_type'] == 'checkpoint_challenge_required') {
