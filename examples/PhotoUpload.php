@@ -9,8 +9,8 @@ $filename = 'photo.jpg'; /* photo extensiun must .jpg */
 $caption = 'Wow This is caption you...'; /* caption text */
 
 $Upload = new InstagramPhotoUpload();
-$Upload->Auth($datacookie,'cookie');
-
+$Upload->SetCookie($datacookie);
+$Upload->SetCSRF($datacookie);
 $Upload->UploadPhoto($filename);
 $Upload->CaptionPhoto($caption);
 

@@ -6,65 +6,56 @@ Class InstagramAuth
 	public static function AuthUsingCookie($cookie)
 	{
 
-		$userid = InstagramCookie::GetUIDCookie($cookie);
-		if (empty($userid)) die("cookie tidak valid");
-
-		$userinfo = InstagramResourceUser::GetUserInfoByID($userid);
+		$check_cookie = InstagramChecker::CheckLiveCookie($cookie);
+		if (!$check_cookie) die("[ERROR] cookie tidak bisa digunakan".PHP_EOL);
 
 		$csrftoken = InstagramCookie::GetCSRFCookie($cookie);
 
 		return [
-			'userid' => $userid,
-			'username' => $userinfo['username'], 
-			'photo' => $userinfo['photo'],
-			'cookie' => $cookie,
-			'csrftoken' => $csrftoken
+		'userid' => $check_cookie['userid'],
+		'username' => $check_cookie['username'], 
+		'photo' => $check_cookie['photo'],
+		'cookie' => $cookie,
+		'csrftoken' => $csrftoken
 		];
 
 	}
 
 	public static function AuthUsingFacebookToken($data)
 	{
-		$data = str_replace(['view-source:','#'], '', $data);
-		parse_str(parse_url($data, PHP_URL_QUERY), $output);;
 
-		if (empty($output['access_token'])) {
-			die("Data Tidak valid...");
-		}
+		$token = InstagramHelper::ParseAccessToken($data);
 
-		$token = $output['access_token'];
-
-		$fbid = InstagramResourceUser::GetFacebookID($token);
-
-		$login = InstagramChecker::AccountConnectedWithFacebook($fbid,$token);
+		$login = InstagramChecker::AccountConnectedWithFacebook($token);
 
 		if (!$login) {
-			die("Facebook ini tidak terhubung dengan instagram !");
+			die("[ERROR] Akun facebook tidak terhubung dengan instagram");
 		}
 
 		$cookie = InstagramCookie::ReadCookie($login['header']);
 		$userinfo = InstagramResourceUser::GetUserInfoByFBToken($token);
 		$csrftoken = InstagramCookie::GetCSRFCookie($cookie);
 		$userid = $login['userid'];		
-		// $userid = InstagramHelper::GetUserIDByAPI($userinfo['username'],$cookie);
 
 		return [
-			'userid' => $userid,
-			'username' => $userinfo['username'], 
-			'photo' => $userinfo['photo'],
-			'cookie' => $cookie,
-			'csrftoken' => $csrftoken
+		'userid' => $userid,
+		'username' => $userinfo['username'], 
+		'photo' => $userinfo['photo'],
+		'cookie' => $cookie,
+		'csrftoken' => $csrftoken
 		];
 	}
 
 	public static function AuthLoginByWebAjax($username,$password) 
 	{
 
-		$cookiedata = InstagramCSRF::GetCSRFBySharedData();
+		$url = 'https://www.instagram.com/accounts/login/ajax/';
 
 		$password_enc = '#PWD_INSTAGRAM_BROWSER:0:' . time() . ':' . $password;
 
 		$postdata = "username={$username}&enc_password={$password_enc}&queryParams=%7B%7D&optIntoOneTap=false";
+
+		$cookiedata = InstagramCSRF::GetCSRFBySharedData();
 
 		$headers = array();
 		$headers[] = 'Referer: https://www.instagram.com/accounts/emailsignup/';
@@ -72,7 +63,7 @@ Class InstagramAuth
 		$headers[] = "X-Csrftoken: ".$cookiedata['csrftoken'];
 		$headers[] = "Cookie: ". $cookiedata['all'];
 
-		$login = InstagramHelper::curl('https://www.instagram.com/accounts/login/ajax/', $postdata , $headers);
+		$login = InstagramHelper::curl($url, $postdata , $headers);
 		$result = json_decode($login['body']);
 
 		if (is_null($result)) {
@@ -88,12 +79,13 @@ Class InstagramAuth
 			$userinfo = InstagramResourceUser::GetUserInfoByID($userid);
 
 			return [
-				'userid' => $userid,
-				'username' => $userinfo['username'], 
-				'photo' => $userinfo['photo'],
-				'cookie' => $cookie,
-				'csrftoken' => $csrftoken
+			'userid' => $userid,
+			'username' => $userinfo['username'], 
+			'photo' => $userinfo['photo'],
+			'cookie' => $cookie,
+			'csrftoken' => $csrftoken
 			];
+
 		}else{
 			if ($result->user == true) {
 				die("Password salah");
@@ -101,6 +93,66 @@ Class InstagramAuth
 				die("Username tidak ditemukan, bisa juga kesalahan pada kode");
 			}
 		}
+	}
+
+	public static function AuthLoginByAPI($username,$password)
+	{
+
+		$url = 'https://i.instagram.com/api/v1/accounts/login/';
+
+		$guid = InstagramHelperAPI::generateUUID(true);
+
+		$data = [
+		'device_id'           => InstagramHelperAPI::generateDeviceId(md5($username.$password)),
+		'guid'                => $guid,
+		'phone_id'            => InstagramHelperAPI::generateUUID(true),
+		'username'            => $username,
+		'password'            => $password,
+		'login_attempt_count' => '0',
+		];
+
+		$postdata = InstagramHelperAPI::generateSignature(json_encode($data));
+
+		$headers = [
+		'Connection: close',
+		'Accept: */*',
+		'Content-type: application/x-www-form-urlencoded; charset=UTF-8',
+		'Cookie2: $Version=1',
+		'Accept-Language: en-US',
+		];
+
+		$useragent = InstagramUserAgent::Get('Android');
+
+		$login = InstagramHelper::curl($url, $postdata , $headers , false, $useragent);
+
+		// echo $login['body'];
+
+		$response = json_decode($login['body'],true);
+
+		if($response['status'] == 'ok') {
+
+			$userid = $response['logged_in_user']['pk'];
+			$userinfo = InstagramResourceUser::GetUserInfoByID($userid);			
+			$rank_token = $userid.'_'.$guid;
+
+			$cookie = InstagramCookie::ReadCookie($login['header']);
+			$csrftoken = InstagramCookie::GetCSRFCookie($cookie);
+
+			return [
+			'userid' => $userid,
+			'username' => $userinfo['username'], 
+			'photo' => $userinfo['photo'],
+			'cookie' => $cookie,
+			'csrftoken' => $csrftoken,
+			'rank_token' => $rank_token
+			];
+
+		}elseif ($response['error_type'] == 'checkpoint_challenge_required') {
+			echo "checkpoint required";
+			exit;
+		}
+
+		die($response['message']);
 	}
 
 }

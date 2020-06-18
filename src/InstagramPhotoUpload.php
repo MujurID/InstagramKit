@@ -16,11 +16,7 @@ Class InstagramPhotoUpload
 	public function SetCookie($data) 
 	{
 		$this->cookie = $data;
-	}
-
-	public function SetCSRF($data) 
-	{
-		$this->csrftoken = $data;
+		$this->csrftoken = InstagramCookie::GetCSRFCookie($data);
 	}
 	
 	public function UploadPhoto($binary_file)

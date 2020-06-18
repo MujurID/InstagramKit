@@ -25,8 +25,8 @@ Class InstagramResourceUser
 				$photo = $result->data->user->reel->owner->profile_pic_url;
 
 				return [
-					'username' => $username,
-					'photo' => $photo
+				'username' => $username,
+				'photo' => $photo
 				];
 			}else{
 				die("tidak ditemukan data untuk userid : {$userid}");
@@ -34,29 +34,6 @@ Class InstagramResourceUser
 		}else{
 			die($access['body']);
 		}
-	}
-
-	public static function GetUserIDByAPI($username,$cookie)
-	{
-
-
-		$url = 'https://i.instagram.com/api/v1/users/' . $username . '/usernameinfo';
-
-		$headers = array();
-		$headers[] = "X-Csrftoken: ".InstagramCSRF::GetCSRFByAPI();
-		$headers[] = "Cookie: ".$cookie;
-
-		$useragent = InstagramUserAgent::Get('Windows');
-
-		$access = InstagramHelper::curl($url, false , $headers, false, $useragent);
-
-		$result = json_decode($access['body']);
-
-		if ($result->status != 'ok') {
-			die("Ada Kesalahan pada proses");
-		}
-
-		return $result->user->pk;	
 	}
 
 	public static function GetUserInfoByFBToken($token)
@@ -80,19 +57,101 @@ Class InstagramResourceUser
 		$photo = $result->igAccount->profilePictureUrl;		
 
 		return [
-			'username' => $username,
-			'photo' => $photo
+		'username' => $username,
+		'photo' => $photo
 		];
 	}
 
 	public static function GetFacebookID($token)
 	{
 		$access = InstagramHelper::curl("https://graph.facebook.com/me?fields=name,picture&access_token={$token}");
+
 		$response = json_decode($access['body']);
-		if (strpos($access['header'],'HTTP/2 400') !== false) {
+		if (strpos($access['header'],'400 Bad Request') !== false) {
 			die($response->error->message);
 		}	
 
 		return $response->id;
 	}
+
+	public static function GetCurrentUserInfoByAPI($cookie){
+
+		$url = 'https://i.instagram.com/api/v1/accounts/current_user/';
+
+		$headers = array();
+		$headers[] = "X-Csrftoken: ".InstagramCookie::GetCSRFCookie($cookie);
+		$headers[] = "Cookie: ".$cookie;
+
+		$useragent = InstagramUserAgent::Get('Android');
+
+		$access = InstagramHelper::curl($url, false , $headers, false, $useragent);
+
+
+		return json_decode($access['body'],true);
+	}
+
+	public static function GetUserInfoByAPI($cookie){
+
+		$userid = InstagramCookie::GetUIDCookie($cookie);
+		if (empty($userid)) die("[ERROR] tidak dapat mengambil user id dari cookie");
+
+		$url = 'https://i.instagram.com/api/v1/users/' . $userid . '/info/';
+
+		$headers = array();
+		$headers[] = "X-Csrftoken: ".InstagramCookie::GetCSRFCookie($cookie);
+		$headers[] = "Cookie: ".$cookie;
+
+		$useragent = InstagramUserAgent::Get('Android');
+
+		$access = InstagramHelper::curl($url, false , $headers, false, $useragent);
+
+		return json_decode($access['body'],true);
+	}	
+
+	public static function GetUsernameInfoByAPI($cookie,$username)
+	{
+
+		$url = 'https://i.instagram.com/api/v1/users/' . $username . '/usernameinfo';
+
+		$headers = array();
+		$headers[] = "X-Csrftoken: ".InstagramCookie::GetCSRFCookie($cookie);
+		$headers[] = "Cookie: ".$cookie;
+
+		$useragent = InstagramUserAgent::Get('Android');
+
+		$access = InstagramHelper::curl($url, false , $headers, false, $useragent);
+
+		return json_decode($access['body'],true);
+	}
+
+
+	public static function GetFriendshipsFollowersByAPI($cookie,$userid)
+	{
+
+		$next = false;
+		$next_id = false;
+
+		if($next == true) { 
+			$parameters = '?max_id='.$next_id; 
+		} 
+		else { 
+			$parameters = ''; 
+		}
+
+		$url = 'https://i.instagram.com/api/v1/friendships/'.$userid.'/followers/'.$parameters;
+
+		$headers = array();
+		$headers[] = "X-Csrftoken: ".InstagramCookie::GetCSRFCookie($cookie);
+		$headers[] = "Cookie: ".$cookie;
+
+		$useragent = InstagramUserAgent::Get('Android');
+
+		$access = InstagramHelper::curl($url, false , $headers, false, $useragent);
+
+		echo $access['body'];
+		exit;
+
+		return json_decode($access['body'],true);		
+	}
+
 }

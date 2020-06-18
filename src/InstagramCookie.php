@@ -25,9 +25,8 @@ Class InstagramCookie
 		}
 
 		if (!$cookies) die("Cookie Tidak bisa diambil, kesalahan pada kode.");
-		$search  = ['target="";'];
 
-		return str_replace($search,'', $cookies);
+		return $cookies;
 	}
 
 	public static function GetUIDCookie($cookies){

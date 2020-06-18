@@ -2,14 +2,16 @@
 
 Class InstagramChecker
 {	
-	public static function AccountConnectedWithFacebook($fbid,$token)
+	public static function AccountConnectedWithFacebook($token)
 	{
+
+		$fbid = InstagramResourceUser::GetFacebookID($token);
 
 		$url = 'https://www.instagram.com/accounts/login/ajax/facebook/';
 		$postdata = "accessToken={$token}&fbUserId={$fbid}&queryParams=%7B%7D";
 
 		$headers = array();
-		$headers[] = "X-Csrftoken: ".InstagramCSRF::GetCSRFByAPI();
+		$headers[] = "X-Csrftoken: ".InstagramCSRF::GetCSRFBySharedData();
 
 		$access = InstagramHelper::curl($url,$postdata,$headers);
 		$header = $access['header'];
@@ -20,38 +22,22 @@ Class InstagramChecker
 		}		
 
 		return [
-			'userid' => $result->userId,
-			'header' => $header 
+		'userid' => $result->userId,
+		'header' => $header 
 		];
 	}
 
-	public static function CheckLiveCookie($data)
-	{
+	public static function CheckLiveCookie($cookie){
 
-		$url = 'https://i.instagram.com/api/v1/users/' . $data['username'] . '/usernameinfo';
-
-		$headers = array();
-		$headers[] = "Cookie: ".$data['cookie'];
-
-		$useragent = InstagramUserAgent::Get('Windows');
-
-		$access = InstagramHelper::curl($url, false , $headers, false, $useragent);
-
-		$result = json_decode($access['body']);
-
-		if ($result->status == 'ok') {
-			return true;
-		}
-
-		return false;
-	}
-
-	public static function CheckLiveCookieV2($data){
-
-		$url = 'https://www.instagram.com/'.$data['username'].'/?__a=1';
+		$userid = InstagramCookie::GetUIDCookie($cookie);
+		if (empty($userid)) die("[ERROR] tidak dapat mengambil user id dari cookie");
+		
+		$userinfo = InstagramResourceUser::GetUserInfoByID($userid);
+		
+		$url = 'https://www.instagram.com/'.$userinfo['username'].'/?__a=1';
 
 		$headers = array();
-		$headers[] = "Cookie: ".$data['cookie'];
+		$headers[] = "Cookie: ".$cookie;
 
 		$useragent = InstagramUserAgent::Get('Windows');
 
@@ -60,7 +46,11 @@ Class InstagramChecker
 		$result = json_decode($access['body']);
 
 		if($result->graphql->user->restricted_by_viewer === false){
-			return true;
+			return [
+			'userid' => $userid,
+			'username' => $userinfo['username'],
+			'photo' => $userinfo['photo']
+			];
 		}
 
 		return false;

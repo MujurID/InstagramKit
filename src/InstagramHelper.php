@@ -45,8 +45,8 @@ Class InstagramHelper
 			curl_close($ch);
 
 			return [
-				'header' => $header,
-				'body' => $body
+			'header' => $header,
+			'body' => $body
 			];
 		}
 	}	
@@ -62,6 +62,20 @@ Class InstagramHelper
 		if (empty($str[1])) return false;
 		$str = explode($end,$str[1]);
 		return $str[0];
+	}
+
+	public static function ParseAccessToken($data)
+	{
+		$data = str_replace(['view-source:','#'], '', $data);
+		parse_str(parse_url($data, PHP_URL_QUERY), $output);;
+
+		if (empty($output['access_token'])) {
+			die("[ERROR] Token tidak ditemukan");
+		}
+
+		$token = $output['access_token'];
+
+		return $token;
 	}
 
 }

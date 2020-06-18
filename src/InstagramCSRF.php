@@ -11,7 +11,7 @@ Class InstagramCSRF
 		$fetch = InstagramHelper::curl('https://www.instagram.com/data/shared_data/');
 		$header = $fetch['header'];
 
-		preg_match_all('/^set-cookie:\s*([^;]*)/mi', $header, $matches);
+		preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $header, $matches);
 
 		$cookies = array();
 		foreach($matches[1] as $item) {
@@ -38,8 +38,8 @@ Class InstagramCSRF
 		$fetch = InstagramHelper::curl('https://i.instagram.com/api/v1/si/fetch_headers/?challenge_type=signup');
 		$header = $fetch['header'];
 
-		if (!preg_match('#set-cookie: csrftoken=([^;]+)#', $header, $token)) {
-			die("Missing csrftoken, try again");
+		if (!preg_match('/^Set-Cookie:\s*([^;]*)/mi', $header, $token)) {
+			die("[ERROR] Tidak ditemukan csrftoken");
 		} else {
 			return substr($token[0], 22);
 		}
