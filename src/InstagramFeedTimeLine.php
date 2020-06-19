@@ -1,8 +1,6 @@
 <?php namespace Riedayme\InstagramKit;
 
-/**
- * Get Feed TimeLine
- */
+
 Class InstagramFeedTimeLine
 {
 
@@ -15,11 +13,7 @@ Class InstagramFeedTimeLine
 	public function SetCookie($data) 
 	{
 		$this->cookie = $data;
-	}
-
-	public function SetCSRF($data) 
-	{
-		$this->csrftoken = $data;
+		$this->csrftoken = InstagramCookie::GetCSRFCookie($data);
 	}
 
 	public function GetFeedTimeLine($data)
@@ -133,22 +127,22 @@ Class InstagramFeedTimeLine
 						$sidecarmedia = ($sidecartype == 'image') ? $postsidecar['node']['display_url'] : $postsidecar['node']['video_url'];
 
 						$is_sidecar[] = [
-							'media' => $sidecarmedia,
-							'type' => $sidecartype,
+						'media' => $sidecarmedia,
+						'type' => $sidecartype,
 						];
 					}
 				}
 
 				$this->FeedTimeLine[] = [
-					'id' => $id,
-					'username' => $username,
-					'code' => $code,
-					'url' => $url,
-					'media' => $media,
-					'type' => $type,
-					'caption' => $caption,
-					'haslike' => $haslike,
-					'is_sidecar' => $is_sidecar
+				'id' => $id,
+				'username' => $username,
+				'code' => $code,
+				'url' => $url,
+				'media' => $media,
+				'type' => $type,
+				'caption' => $caption,
+				'haslike' => $haslike,
+				'is_sidecar' => $is_sidecar
 				];
 			}
 

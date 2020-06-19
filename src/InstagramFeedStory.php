@@ -5,7 +5,6 @@ Class InstagramFeedStory
 
 	public $cookie;	
 	public $csrftoken;
-	public $useragent;
 
 	public $query_hash;	
 
@@ -14,11 +13,6 @@ Class InstagramFeedStory
 		$this->cookie = $data;
 		$this->csrftoken = InstagramCookie::GetCSRFCookie($data);
 		$this->query_hash = self::GetQueyHash();
-	}
-
-	public function SetUserAgent($data) 
-	{
-		$this->useragent = $data;
 	}
 
 	public function GetQueyHash()
@@ -158,57 +152,6 @@ Class InstagramFeedStory
 				];
 			}
 
-		}
-
-		return $extract;
-	}
-
-	public function GetFeedStoryUserByAPI($userid)
-	{
-
-		$url = 'https://i.instagram.com/api/v1/feed/user/'.$userid.'/story/';
-
-		$access = InstagramHelperAPI::curl($url, false , false, $this->cookie, $this->useragent);
-
-		// echo $access['body'];
-		// exit;
-		
-		$response = json_decode($access['body'],true);
-
-		if ($response['status'] == 'ok' AND $response['reel'] != null) {
-			return self::ExtractStoryUserAPI($response);		
-		}else{
-			// Tidak dapat mengambil feed story user
-			return false;
-		}	
-	}	
-
-	public function ExtractStoryUserAPI($response)
-	{
-		$reels_media = $response['reel'];
-
-		$extract = array();
-
-		$userid = $reels_media['user']['pk'];
-		$username = $reels_media['user']['username'];
-
-		$items = $reels_media['items'];
-		foreach ($items as $story) {
-			$id = $story['pk'];
-			$type = ($story['media_type'] == '1') ? 'image' : 'video';
-			$media = ($type == 'image') ? $story['image_versions2']['candidates'][0]['url'] : $story['video_versions'][0]['url'];
-			$taken_at = $story['taken_at'];
-
-			/** get polling,question,and other here if exist */
-
-			$extract[] = [
-				'id' => $id,
-				'userid' => $userid,				
-				'username' => $username,
-				'media' => $media,
-				'type' => $type,
-				'taken_at' => $taken_at
-			];
 		}
 
 		return $extract;

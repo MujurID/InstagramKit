@@ -121,9 +121,7 @@ Class InstagramAuth
 		'Accept-Language: en-US',
 		];
 
-		$useragent = InstagramUserAgent::Get('Android');
-
-		$login = InstagramHelper::curl($url, $postdata , $headers , false, $useragent);
+		$login = InstagramHelper::curl($url, $postdata , false , false, InstagramUserAgent::Get('Android'));
 
 		$response = json_decode($login['body'],true);
 
@@ -143,12 +141,33 @@ Class InstagramAuth
 			'cookie' => $cookie,
 			'csrftoken' => $csrftoken,
 			'uuid' => $guid,
-			'rank_token' => $rank_token,
-			'useragent' => $useragent
+			'rank_token' => $rank_token
 			];
 
 		}elseif ($response['error_type'] == 'checkpoint_challenge_required') {
-			echo "checkpoint required";
+
+			$url = $response['challenge']['url'];
+
+			$cookie = InstagramCookie::ReadCookie($login['header']);
+			$csrftoken = InstagramCookie::GetCSRFCookie($cookie);
+
+			$postdata = "choice=2";
+
+			$headers = [
+			'Connection: keep-alive',
+			'Proxy-Connection: keep-alive',
+			'Accept-Language: en-US,en',
+			'x-csrftoken: '.$csrftoken,
+			'x-instagram-ajax: 1',
+			'Referer: '.$url,
+			'x-requested-with: XMLHttpRequest',
+			'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+			];
+
+			$access = InstagramHelperAPI::curl($url, $postdata , $headers , $cookie, InstagramUserAgent::Get('Android'));
+
+			echo $access['body'];
+
 			exit;
 		}
 

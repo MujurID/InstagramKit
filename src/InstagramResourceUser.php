@@ -111,27 +111,4 @@ Class InstagramResourceUser
 		return json_decode($access['body'],true);
 	}
 
-
-	public static function GetFriendshipsFollowersByAPI($cookie,$userid)
-	{
-
-		$next = false;
-		$next_id = false;
-
-		if($next == true) { 
-			$parameters = '?max_id='.$next_id; 
-		} 
-		else { 
-			$parameters = ''; 
-		}
-
-		$url = 'https://i.instagram.com/api/v1/friendships/'.$userid.'/followers/'.$parameters;
-
-		$useragent = InstagramUserAgent::Get('Android');
-
-		$access = InstagramHelperAPI::curl($url, false , false, $cookie, $useragent);
-
-		return json_decode($access['body'],true);		
-	}
-
 }

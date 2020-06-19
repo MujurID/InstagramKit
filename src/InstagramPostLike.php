@@ -13,10 +13,10 @@ Class InstagramPostLike
 
 	public function SetCSRF($data) 
 	{
-		$this->csrftoken = $data;
+		$this->csrftoken = InstagramCookie::GetCSRFCookie($data);
 	}
 
-	public function LikePostByWeb($postdata)
+	public function Process($postdata)
 	{
 
 		$url = "https://www.instagram.com/web/likes/{$postdata['id']}/like/";
@@ -33,13 +33,12 @@ Class InstagramPostLike
 		if ($response['status'] == 'ok') {
 			return [
 			'status' => true,
-			'id' => $postdata['id'],
-			'username' => $postdata['username']
+			'id' => $postdata['id']
 			];
 		}else{
 			return false;
 		}
 
-	}	
+	}
 
 }

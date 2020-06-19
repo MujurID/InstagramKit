@@ -18,3 +18,22 @@ https://instagram.com/api/v1/media/' . $media->pk . '/like/
 -- web request
 https://www.instagram.com/graphql/query/?query_hash=c409f8bda63382c86db99f2a2ea4a9b2&variables=%7B%7D
 https://www.instagram.com/web/likes/$id/like/
+
+-- instagram api resource
+followURL = "https://i.instagram.com/api/v1/friendships/create/{}/"
+unfollowURL = "https://i.instagram.com/api/v1/friendships/destroy/{}/" 
+loginURL = "https://i.instagram.com/api/v1/accounts/login/"
+uploadURL = "https://i.instagram.com/api/v1/media/upload/"
+configureURL = "https://i.instagram.com/api/v1/media/configure/"
+followerListURL = "https://i.instagram.com/api/v1/friendships/{}/followers/"
+followingListURL = "https://i.instagram.com/api/v1/friendships/{}/following/"
+userMediaURL = "https://i.instagram.com/api/v1/feed/user/{}/"
+userInfoURL = "https://i.instagram.com/api/v1/users/{}/info/"
+
+instagram feed : https://i.instagram.com/api/v1/feed/reels_tray/
+
+feed/reels_media/
+
+feed/user/{$userId}/reel_media/
+
+		// $url = 'https://i.instagram.com/api/v1/feed/user/'.$userid.'/story/';

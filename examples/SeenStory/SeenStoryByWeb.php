@@ -16,7 +16,7 @@ $seenstory = new InstagramSeenStory();
 $seenstory->SetCookie($datacookie);
 
 foreach ($StoryUser as $story) {
-	$results = $seenstory->SeenStoryByWeb($story);
+	$results = $seenstory->Process($story);
 	echo "<pre>";
 	var_dump($results);
 	echo "</pre>";
@@ -28,8 +28,8 @@ array(3) {
   ["status"]=>
   bool(true)
   ["id"]=>
-  string(19) "2334166284923520094"
+  string(19) "2334537192093194524"
   ["username"]=>
-  string(12) "fauzan121002"
+  string(9) "faanteyki"
 }
 */

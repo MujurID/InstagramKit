@@ -1,20 +1,15 @@
 <?php namespace Riedayme\InstagramKit;
 
-Class InstagramPostRead
+Class InstagramPostReadAPI
 {
 
 	public $cookie;	
-	public $csrftoken;
+
 	public $results;
 
 	public function SetCookie($data) 
 	{
 		$this->cookie = $data;
-	}
-
-	public function SetCSRF($data) 
-	{
-		$this->csrftoken = $data;
 	}
 
 	public function GetPost()
@@ -24,12 +19,9 @@ Class InstagramPostRead
 
 		$url = 'https://i.instagram.com/api/v1/feed/user/' . $userid;
 
-		$headers = array();
-		$headers[] = "Cookie: ".$this->cookie;
+		$useragent = InstagramUserAgent::Get('Android');
 
-		$useragent = InstagramUserAgent::Get('Windows');
-
-		$access = InstagramHelper::curl($url, false , $headers, false, $useragent);
+		$access = InstagramHelperAPI::curl($url, false , false , $this->cookie , $useragent);
 
 		$response = json_decode($access['body']);
 

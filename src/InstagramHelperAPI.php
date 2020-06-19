@@ -44,8 +44,8 @@ Class InstagramHelperAPI
 			curl_close($ch);
 
 			return [
-				'header' => $header,
-				'body' => $body
+			'header' => $header,
+			'body' => $body
 			];
 		}
 	}	
@@ -58,6 +58,7 @@ Class InstagramHelperAPI
 
 	public static function generateSignature($data)
 	{
+		// ac129560d96023898d85aff6ee861218ff504ab34848a09747a3f0987439de0f
 		$hash = hash_hmac('sha256', $data, 'b4946d296abf005163e72346a6d33dd083cadde638e6ad9c5eb92e381b35784a');
 		return 'ig_sig_key_version=4&signed_body='.$hash.'.'.urlencode($data);
 	}
@@ -77,7 +78,7 @@ Class InstagramHelperAPI
 			mt_rand(0, 0x0fff) | 0x4000,
 			mt_rand(0, 0x3fff) | 0x8000,
 			mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
-		);
+			);
 
 		return $type ? $uuid : str_replace('-', '', $uuid);
 	}

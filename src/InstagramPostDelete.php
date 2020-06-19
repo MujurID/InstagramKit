@@ -9,11 +9,7 @@ Class InstagramPostDelete
 	public function SetCookie($data) 
 	{
 		$this->cookie = $data;
-	}
-
-	public function SetCSRF($data) 
-	{
-		$this->csrftoken = $data;
+		$this->csrftoken = InstagramCookie::GetCSRFCookie($data);
 	}
 
 	public function Process($postdata)
@@ -42,8 +38,8 @@ Class InstagramPostDelete
 		}
 
 		return [
-			'success' => count($success),
-			'failed' => count($failed)
+		'success' => count($success),
+		'failed' => count($failed)
 		];
 	}
 
