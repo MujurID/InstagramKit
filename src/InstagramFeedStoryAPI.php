@@ -21,6 +21,9 @@ Class InstagramFeedStoryAPI
 		$url = 'https://i.instagram.com/api/v1/feed/user/'.$userid.'/reel_media/';
 
 		$access = InstagramHelperAPI::curl($url, false , false , $this->cookie , InstagramUserAgent::Get('Android'));
+
+		// echo $access['body'];
+		// exit;
 		
 		$response = json_decode($access['body'],true);
 
@@ -83,19 +86,30 @@ Class InstagramFeedStoryAPI
 
 				$story_sliders['id'] = $read_sliders['slider_id'];
 				$story_sliders['question'] = $read_sliders['question'];
-			}			
+			}	
+
+			$story_quizs = false;
+			if (array_key_exists('story_quizs', $story)) {
+
+				$read_quizs = $story['story_quizs'][0]['quiz_sticker'];
+
+				$story_quizs['id'] = $read_quizs['quiz_id'];
+				$story_quizs['question'] = $read_quizs['question'];
+				$story_quizs['count_question'] = count($read_quizs['tallies']);				
+			}					
 
 			$extract[] = [
-			'id' => $id,
-			'userid' => $userid,
-			'username' => $username,
-			'media' => $media,
-			'type' => $type,
-			'taken_at' => $taken_at,
-			'story_questions' => $story_questions,
-			'story_polls' => $story_polls,
-			'story_countdowns' => $story_countdowns,
-			'story_sliders' => $story_sliders						
+				'id' => $id,
+				'userid' => $userid,
+				'username' => $username,
+				'media' => $media,
+				'type' => $type,
+				'taken_at' => $taken_at,
+				'story_questions' => $story_questions,
+				'story_polls' => $story_polls,
+				'story_countdowns' => $story_countdowns,
+				'story_sliders' => $story_sliders,
+				'story_quizs' => $story_quizs						
 			];
 		}
 

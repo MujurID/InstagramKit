@@ -36,4 +36,9 @@ feed/reels_media/
 
 feed/user/{$userId}/reel_media/
 
-		// $url = 'https://i.instagram.com/api/v1/feed/user/'.$userid.'/story/';
+// $url = 'https://i.instagram.com/api/v1/feed/user/'.$userid.'/story/';
+
+GetInputStoryQuestionsMessage
+GetInputLimitPerday
+GetInputRangeStory
+GetInputTargets

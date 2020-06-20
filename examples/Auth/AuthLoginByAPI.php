@@ -1,14 +1,18 @@
 <?php  
 require "../../vendor/autoload.php";
 
-use Riedayme\InstagramKit\InstagramAuth;
+use Riedayme\InstagramKit\InstagramAuthAPI;
 
 $username = 'riedayme';
 $password = 'igxrealig223366';
 
-$auth = new InstagramAuth();
+$auth = new InstagramAuthAPI();
 
-$results = $auth->AuthLoginByAPI($username,$password);
+$results = $auth->Login($username,$password);
+
+if ($results['response'] == 'checkpoint') {
+  $sendchekpoint = $auth->CheckPointSend($results);
+}
 
 echo "<pre>";
 var_dump($results);
