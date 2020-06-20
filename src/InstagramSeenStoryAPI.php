@@ -34,7 +34,7 @@ Class InstagramSeenStoryAPI
 		$data = json_encode([
 			'reels'      => ($is_vod == false ? $reels_real : []),
 			'live_vods'  => ($is_vod == true ? $reels_real : [])
-		]);	
+			]);	
 
 		$postdata = InstagramHelperAPI::generateSignature($data);
 
@@ -44,45 +44,41 @@ Class InstagramSeenStoryAPI
 
 		if ($response['status'] == 'ok') {
 
-			$seen_story_questions = false;
+			$story_type = 'default';
+			$story_response = 'success';
+			
 			if ($storydata['story_questions'] !== false) 
 			{
-				$seen_story_questions = self::seen_story_questions($storydata);
+				$story_type = 'question';
+				$story_response = self::seen_story_questions($storydata);
 			}
-
-			$seen_story_polls = false;
-			if ($storydata['story_polls'] !== false) 
+			elseif ($storydata['story_polls'] !== false) 
 			{
-				$seen_story_polls = self::seen_story_polls($storydata);
+				$story_type = 'poll';
+				$story_response = self::seen_story_polls($storydata);
 			}
-
-			$seen_story_countdowns = false;
-			if ($storydata['story_countdowns'] !== false) 
+			elseif ($storydata['story_countdowns'] !== false) 
 			{
-				$seen_story_countdowns = self::seen_story_countdowns($storydata);
+				$story_type = 'countdowns';
+				$story_response = self::seen_story_countdowns($storydata);
 			}
-
-			$seen_story_sliders = false;
-			if ($storydata['story_sliders'] !== false) 
+			elseif ($storydata['story_sliders'] !== false) 
 			{
-				$seen_story_sliders = self::seen_story_sliders($storydata);
+				$story_type = 'slider';
+				$story_response = self::seen_story_sliders($storydata);
 			}
-
-			$seen_story_quizs = false;
-			if ($storydata['story_quizs'] !== false) 
+			elseif ($storydata['story_quizs'] !== false) 
 			{
-				$seen_story_quizs = self::seen_story_quizs($storydata);
+				$story_type = 'quiz';
+				$story_response = self::seen_story_quizs($storydata);
 			}
 
 			return [
-				'status' => true,
-				'id' => $storydata['id'],
-				'username' => $storydata['username'],
-				'response_story_questions' => $seen_story_questions,
-				'response_story_polls' => $seen_story_polls,
-				'response_story_countdowns' => $seen_story_countdowns,
-				'response_story_sliders' => $seen_story_sliders,
-				'response_story_quizs' => $seen_story_quizs,				
+			'status' => true,
+			'id' => $storydata['id'],
+			'username' => $storydata['username'],
+			'story_type' => $story_type,
+			'story_response' => $story_response
 			];
 		}
 
@@ -99,7 +95,7 @@ Class InstagramSeenStoryAPI
 		$data = json_encode([
 			'response' => $this->option['story_questions']['message'],
 			'type' => 'text'
-		]);	
+			]);	
 
 		$postdata = InstagramHelperAPI::generateSignature($data);
 
@@ -124,7 +120,7 @@ Class InstagramSeenStoryAPI
 		$data = json_encode([
 			'radio_type' => 'none',
 			'vote' => $this->option['story_polls']['vote'],
-		]);	
+			]);	
 
 		$postdata = InstagramHelperAPI::generateSignature($data);
 
@@ -167,7 +163,7 @@ Class InstagramSeenStoryAPI
 		$data = json_encode([
 			'radio_type' => 'wifi-none',
 			'vote' => $this->option['story_sliders']['vote'],
-		]);	
+			]);	
 
 		$postdata = InstagramHelperAPI::generateSignature($data);
 
@@ -191,7 +187,7 @@ Class InstagramSeenStoryAPI
 
 		$data = json_encode([
 			'answer' => rand(0,3),
-		]);	
+			]);	
 
 		$postdata = InstagramHelperAPI::generateSignature($data);
 

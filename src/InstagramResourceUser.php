@@ -111,4 +111,16 @@ Class InstagramResourceUser
 		return json_decode($access['body'],true);
 	}
 
+	function GetUserIdByScraping($username)
+	{
+		$url      = "https://www.instagram.com/" . $username;
+		$html     = file_get_contents($url);
+		$arr      = explode('window._sharedData = ', $html);
+		$arr      = explode(';</script>', $arr[1]);
+		$obj      = json_decode($arr[0], true);
+		$id       = $obj['entry_data']['ProfilePage'][0]['graphql']['user']['id'];
+
+		return $id;
+	}
+
 }
