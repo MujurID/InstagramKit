@@ -343,7 +343,7 @@ Class InstagramStoryVoteKuy
 		// exit;
 
 		/* get userlist failed */
-		if (!$userlist) return false;
+		if (!$userlist) return [];
 
 		$results = array();
 		$edges = $userlist['data']['user']['edge_followed_by']['edges'];
@@ -383,8 +383,8 @@ Class InstagramStoryVoteKuy
 			if(!$user['latest_reel_media']) continue;
 
 			$results[] = [
-			'userid' => $user['pk'],
-			'username' => $user['username']
+				'userid' => $user['pk'],
+				'username' => $user['username']
 			];
 
 		}
@@ -409,14 +409,13 @@ Class InstagramStoryVoteKuy
 		$readstory = new InstagramFeedStoryAPI();
 		$readstory->SetCookie($this->cookie);
 
-		$StoryList = array();
-
 		echo "[INFO] Membaca Feed Story dari ".count($FollowersList)." User".PHP_EOL;
 
 		$StoryUser = $readstory->GetStoryUser($FollowersList);
 
-		if (!$StoryUser) return false;
+		if (!$StoryUser) return 'failed_get_story_user';
 		
+		$StoryList = array();
 		foreach ($StoryUser as $story) {
 
 			/* remove not story vote */
@@ -463,30 +462,30 @@ Class InstagramStoryVoteKuy
 		$seenstory->SetCookie($this->cookie);
 		$seenstory->SetOption([
 			'story_questions' => [
-			'active' => true,
-			'message' => self::GetShuffleMessage($this->current_loop_message)
+				'active' => true,
+				'message' => self::GetShuffleMessage($this->current_loop_message)
 			],
 			'story_polls' => [
-			'active' => true,
-			'vote' => '1'
+				'active' => true,
+				'vote' => '1'
 			],
 			'story_countdowns' => [
-			'active' => true
+				'active' => true
 			],
 			'story_sliders' => [
-			'active' => true,
-			'vote' => '1'
+				'active' => true,
+				'vote' => '1'
 			],
 			'story_quizs' => [
-			'active' => true
+				'active' => true
 			],
-			]);		
+		]);		
 
 		$results = $seenstory->SeenStoryByAPI($story);
 
 		if ($results != false) {			
 
-			echo "[SUCCESS] Success Seen Story {$story['id']} | Type : {$story['story_detail']['type']}".PHP_EOL;
+			echo "[".date('d-m-Y H:i:s')."] Success Seen Story {$story['id']} | Type : {$story['story_detail']['type']}".PHP_EOL;
 			echo "[INFO] Response : {$results['story_response']}".PHP_EOL;
 			self::SaveLog(strtolower($this->username),$story['id']);
 			self::SaveLogDaily(strtolower($this->username),$story['id']);
@@ -495,9 +494,9 @@ Class InstagramStoryVoteKuy
 				return 'questions';
 			}
 
-			return true;
+			return 'other';
 		}else{
-			echo "[FAILED] Failed Seen Story {$story['id']}".PHP_EOL;
+			echo "[".date('d-m-Y H:i:s')."] Failed Seen Story {$story['id']}".PHP_EOL;
 			return false;
 		}
 	}
@@ -592,7 +591,7 @@ Class Worker
 		$delay = 10;
 		$delaystory_default = 10;
 		$delaystory = 10;
-		$delay_question = 60; /* 1 minutes delay question */
+		$delay_question = 180; /* 3 minutes delay question limit 20 answer / hours */
 
 		/* Call Class */
 		$Working = new InstagramStoryVoteKuy();
@@ -610,14 +609,12 @@ Class Worker
 			
 			$StoryList = $Working->GetStory();
 
-			if (empty($StoryList)) {
+			if ($StoryList == 'failed_get_followers_list' OR $StoryList == 'failed_get_story_user') {
+				echo "[INFO] Tidak ditemukan Story, Coba lagi setelah {$delaystory} detik".PHP_EOL;
+				sleep($delaystory);
 
-				echo "[SKIP] Tidak ditemukan Story untuk diproses".PHP_EOL;
-				// echo "[INFO] Tidak ditemukan Story, Coba lagi setelah {$delaystory} detik".PHP_EOL;
-				// sleep($delaystory);
-
-				// $delaystory = $delaystory+5;
-				// $nostorystatus++;
+				$delaystory = $delaystory+5;
+				$nostorystatus++;
 
 				continue;
 			}
@@ -636,7 +633,7 @@ Class Worker
 				{
 
 					if ($process_seen == 'questions') {
-						echo "[INFO] Delay {$delay_question}".PHP_EOL;
+						echo "[INFO] DelayQ {$delay_question}".PHP_EOL;
 						sleep($delay_question);
 					}else{
 						echo "[INFO] Delay {$delay}".PHP_EOL;

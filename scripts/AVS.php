@@ -285,11 +285,11 @@ Class Worker
 
 			$StoryList = $Working->GetStory();
 
-			if (empty($StoryList)) {
+			if ($StoryList == 'fail_get_all_story' OR $StoryList == 'fail_get_story_user') {
+				$nogetfeed++;
+			}
 
-				if ($StoryList == 'fail_get_all_story' OR $StoryList == 'fail_get_story_user') {
-					$nogetfeed++;
-				}
+			if (empty($StoryList)) {
 
 				echo "[INFO] Tidak ditemukan Story, Coba lagi setelah {$delaystory} detik".PHP_EOL;
 				sleep($delaystory);

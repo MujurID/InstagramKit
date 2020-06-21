@@ -179,7 +179,7 @@ Class InstagramSeenStoryAPI
 		$url = 'https://i.instagram.com/api/v1/media/'.$storydata['id'].'/'.$storydata['story_detail']['id'].'/story_quiz_answer/';
 
 		$data = json_encode([
-			'answer' => rand(0,3),
+			'answer' => ''.rand(0,$storydata['story_detail']['count_question']).'',
 			]);	
 
 		$postdata = InstagramHelperAPI::generateSignature($data);
