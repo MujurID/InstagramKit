@@ -133,7 +133,7 @@ Class InstagramAuthAPI
 			];
 		}
 
-		return false;
+		return $access['body'];
 	}	
 
 }

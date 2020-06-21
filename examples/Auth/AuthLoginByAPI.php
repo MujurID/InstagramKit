@@ -3,8 +3,8 @@ require "../../vendor/autoload.php";
 
 use Riedayme\InstagramKit\InstagramAuthAPI;
 
-$username = 'riedayme';
-$password = 'igxrealig223366';
+$username = 'username';
+$password = 'password';
 
 $auth = new InstagramAuthAPI();
 

@@ -24,15 +24,13 @@ Class InstagramUserFollowersAPI
 
 		$access = InstagramHelperAPI::curl($url, false , false, $this->cookie, InstagramUserAgent::Get('Android'));
 
-		$userlist = json_decode($access['body'],true);
+		$response = json_decode($access['body'],true);
 
-		// echo $access['body'];
-
-		if ($userlist['status'] != 'ok') {
+		if ($response['status'] != 'ok') {
 			return false;
 		}
 
-		return $userlist;	
+		return $response;	
 	}
 
 }

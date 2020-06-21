@@ -43,33 +43,27 @@ Class InstagramSeenStoryAPI
 		$response = json_decode($access['body'],true);
 
 		if ($response['status'] == 'ok') {
-
-			$story_type = 'default';
-			$story_response = 'success';
 			
-			if ($storydata['story_questions'] !== false) 
+			$story_response = 'success';
+
+			if ($storydata['story_detail']['type'] == 'questions') 
 			{
-				$story_type = 'question';
 				$story_response = self::seen_story_questions($storydata);
 			}
-			elseif ($storydata['story_polls'] !== false) 
+			elseif ($storydata['story_detail']['type'] == 'polls') 
 			{
-				$story_type = 'poll';
 				$story_response = self::seen_story_polls($storydata);
 			}
-			elseif ($storydata['story_countdowns'] !== false) 
+			elseif ($storydata['story_detail']['type'] == 'countdowns') 
 			{
-				$story_type = 'countdowns';
 				$story_response = self::seen_story_countdowns($storydata);
 			}
-			elseif ($storydata['story_sliders'] !== false) 
+			elseif ($storydata['story_detail']['type'] == 'sliders') 
 			{
-				$story_type = 'slider';
 				$story_response = self::seen_story_sliders($storydata);
 			}
-			elseif ($storydata['story_quizs'] !== false) 
+			elseif ($storydata['story_detail']['type'] == 'quizs') 
 			{
-				$story_type = 'quiz';
 				$story_response = self::seen_story_quizs($storydata);
 			}
 
@@ -77,7 +71,6 @@ Class InstagramSeenStoryAPI
 			'status' => true,
 			'id' => $storydata['id'],
 			'username' => $storydata['username'],
-			'story_type' => $story_type,
 			'story_response' => $story_response
 			];
 		}
@@ -90,7 +83,7 @@ Class InstagramSeenStoryAPI
 
 		if (!$this->option['story_questions']['active']) return false;
 
-		$url = 'https://i.instagram.com/api/v1/media/'.$storydata['id'].'/'.$storydata['story_questions']['id'].'/story_question_response/';
+		$url = 'https://i.instagram.com/api/v1/media/'.$storydata['id'].'/'.$storydata['story_detail']['id'].'/story_question_response/';
 
 		$data = json_encode([
 			'response' => $this->option['story_questions']['message'],
@@ -104,7 +97,7 @@ Class InstagramSeenStoryAPI
 		$response = json_decode($access['body'],true);
 
 		if ($response['status'] == 'ok') {
-			return "succes answer question {$storydata['story_questions']['id']} message : {$this->option['story_questions']['message']}";
+			return "succes answer question {$storydata['story_detail']['id']} | message : {$this->option['story_questions']['message']}";
 		}
 
 		return false;
@@ -115,7 +108,7 @@ Class InstagramSeenStoryAPI
 
 		if (!$this->option['story_polls']['active']) return false;
 
-		$url = 'https://i.instagram.com/api/v1/media/'.$storydata['id'].'/'.$storydata['story_polls']['id'].'/story_poll_vote/';
+		$url = 'https://i.instagram.com/api/v1/media/'.$storydata['id'].'/'.$storydata['story_detail']['id'].'/story_poll_vote/';
 
 		$data = json_encode([
 			'radio_type' => 'none',
@@ -129,7 +122,7 @@ Class InstagramSeenStoryAPI
 		$response = json_decode($access['body'],true);
 
 		if ($response['status'] == 'ok') {
-			return "succes polling {$storydata['story_polls']['id']} vote : {$this->option['story_polls']['vote']}";
+			return "succes polling {$storydata['story_detail']['id']} vote : {$this->option['story_polls']['vote']}";
 		}
 
 		return false;
@@ -140,14 +133,14 @@ Class InstagramSeenStoryAPI
 
 		if (!$this->option['story_countdowns']['active']) return false;
 
-		$url = 'https://i.instagram.com/api/v1/media/'.$storydata['story_countdowns']['id'].'/follow_story_countdown/';
+		$url = 'https://i.instagram.com/api/v1/media/'.$storydata['story_detail']['id'].'/follow_story_countdown/';
 
 		$access = InstagramHelperAPI::curl($url, false , false , $this->cookie , InstagramUserAgent::Get('Android'));
 
 		$response = json_decode($access['body'],true);
 
 		if ($response['status'] == 'ok') {
-			return "succes follow story countdown {$storydata['story_countdowns']['id']}";
+			return "succes follow story countdown {$storydata['story_detail']['id']}";
 		}
 
 		return false;		
@@ -158,7 +151,7 @@ Class InstagramSeenStoryAPI
 
 		if (!$this->option['story_sliders']['active']) return false;
 
-		$url = 'https://i.instagram.com/api/v1/media/'.$storydata['id'].'/'.$storydata['story_sliders']['id'].'/story_slider_vote/';
+		$url = 'https://i.instagram.com/api/v1/media/'.$storydata['id'].'/'.$storydata['story_detail']['id'].'/story_slider_vote/';
 
 		$data = json_encode([
 			'radio_type' => 'wifi-none',
@@ -172,7 +165,7 @@ Class InstagramSeenStoryAPI
 		$response = json_decode($access['body'],true);
 
 		if ($response['status'] == 'ok') {
-			return "succes send story sliders {$storydata['story_sliders']['id']}";
+			return "succes send story sliders {$storydata['story_detail']['id']}";
 		}
 
 		return false;				
@@ -183,7 +176,7 @@ Class InstagramSeenStoryAPI
 
 		if (!$this->option['story_quizs']['active']) return false;
 
-		$url = 'https://i.instagram.com/api/v1/media/'.$storydata['id'].'/'.$storydata['story_quizs']['id'].'/story_quiz_answer/';
+		$url = 'https://i.instagram.com/api/v1/media/'.$storydata['id'].'/'.$storydata['story_detail']['id'].'/story_quiz_answer/';
 
 		$data = json_encode([
 			'answer' => rand(0,3),
@@ -196,7 +189,7 @@ Class InstagramSeenStoryAPI
 		$response = json_decode($access['body'],true);
 
 		if ($response['status'] == 'ok') {
-			return "succes send story quiz {$storydata['story_quizs']['id']}";
+			return "succes send story quiz {$storydata['story_detail']['id']}";
 		}
 
 		return false;				

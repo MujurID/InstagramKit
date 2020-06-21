@@ -51,51 +51,52 @@ Class InstagramFeedStoryAPI
 
 			/** get polling,question,and other here if exist */
 
-			$story_questions = false;
+			$story_data['type'] = 'default';
+
 			if (array_key_exists('story_questions', $story)) {
 
 				$read_questions = $story['story_questions'][0]['question_sticker'];
 
-				$story_questions['type'] = $read_questions['question_type'];
-				$story_questions['id'] = $read_questions['question_id'];
-				$story_questions['question'] = $read_questions['question'];
+				$story_data['type'] = 'questions';
+				$story_data['id'] = $read_questions['question_id'];
+				$story_data['question'] = $read_questions['question'];
 			}
 
-			$story_polls = false;
-			if (array_key_exists('story_polls', $story)) {
+			elseif (array_key_exists('story_polls', $story)) {
 
 				$read_polls = $story['story_polls'][0]['poll_sticker'];
 
-				$story_polls['id'] = $read_polls['poll_id'];
-				$story_polls['question'] = $read_polls['question'];
+				$story_data['type'] = 'polls';
+				$story_data['id'] = $read_polls['poll_id'];
+				$story_data['question'] = $read_polls['question'];
 			}		
 
-			$story_countdowns = false;
-			if (array_key_exists('story_countdowns', $story)) {
+			elseif (array_key_exists('story_countdowns', $story)) {
 
 				$read_countdowns = $story['story_countdowns'][0]['countdown_sticker'];
 
-				$story_countdowns['id'] = $read_countdowns['countdown_id'];
-				$story_countdowns['text'] = $read_countdowns['text'];
+				$story_data['type'] = 'countdowns';
+				$story_data['id'] = $read_countdowns['countdown_id'];
+				$story_data['text'] = $read_countdowns['text'];
 			}
 
-			$story_sliders = false;
-			if (array_key_exists('story_sliders', $story)) {
+			elseif (array_key_exists('story_sliders', $story)) {
 
 				$read_sliders = $story['story_sliders'][0]['slider_sticker'];
 
-				$story_sliders['id'] = $read_sliders['slider_id'];
-				$story_sliders['question'] = $read_sliders['question'];
+				$story_data['type'] = 'sliders';
+				$story_data['id'] = $read_sliders['slider_id'];
+				$story_data['question'] = $read_sliders['question'];
 			}	
 
-			$story_quizs = false;
-			if (array_key_exists('story_quizs', $story)) {
+			elseif (array_key_exists('story_quizs', $story)) {
 
 				$read_quizs = $story['story_quizs'][0]['quiz_sticker'];
 
-				$story_quizs['id'] = $read_quizs['quiz_id'];
-				$story_quizs['question'] = $read_quizs['question'];
-				$story_quizs['count_question'] = count($read_quizs['tallies']);				
+				$story_data['type'] ='quizs';
+				$story_data['id'] = $read_quizs['quiz_id'];
+				$story_data['question'] = $read_quizs['question'];
+				$story_data['count_question'] = count($read_quizs['tallies']);				
 			}					
 
 			$extract[] = [
@@ -105,11 +106,7 @@ Class InstagramFeedStoryAPI
 				'media' => $media,
 				'type' => $type,
 				'taken_at' => $taken_at,
-				'story_questions' => $story_questions,
-				'story_polls' => $story_polls,
-				'story_countdowns' => $story_countdowns,
-				'story_sliders' => $story_sliders,
-				'story_quizs' => $story_quizs						
+				'story_detail' => $story_data,						
 			];
 		}
 

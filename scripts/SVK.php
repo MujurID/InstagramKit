@@ -9,9 +9,12 @@ require "../vendor/autoload.php";
 use Riedayme\InstagramKit\InstagramAuthAPI;
 use Riedayme\InstagramKit\InstagramChecker;
 use Riedayme\InstagramKit\InstagramResourceUser;
+use Riedayme\InstagramKit\InstagramUserFollowers;
 use Riedayme\InstagramKit\InstagramUserFollowersAPI;
 use Riedayme\InstagramKit\InstagramFeedStoryAPI;
 use Riedayme\InstagramKit\InstagramSeenStoryAPI;
+
+date_default_timezone_set('Asia/Jakarta');
 
 Class InputHelper
 {
@@ -56,6 +59,22 @@ Class InputHelper
 		return trim(fgets(STDIN));
 	}
 
+	public function GetInputRelog($data = false) {
+
+		if ($data) return $data;
+
+		echo "Apakah anda ingin relogin akun ini : (y/n)".PHP_EOL;
+
+		$input = trim(fgets(STDIN));
+
+		if (!in_array(strtolower($input),['y','n'])) 
+		{
+			die("Pilihan tidak diketahui".PHP_EOL);
+		}
+
+		return (!$input) ? die('Pilihan masih Kosong'.PHP_EOL) : $input;
+	}
+
 	public function GetInputSecurityCode($data = false) {
 
 		if ($data) return $data;
@@ -92,28 +111,28 @@ Class InputHelper
 		return (!$input) ? die('Limit masih kosong'.PHP_EOL) : $input;
 	}
 
-	public function GetInputRangeStory($data = false) {
+	public function GetInputOnlyVote($data = false) 
+	{
 
 		if ($data) return $data;
 
-		echo "Batas Story yang dibaca (angka): ".PHP_EOL;
+		echo "Hanya Vote saja ? (y/n): ".PHP_EOL;
 
 		$input = trim(fgets(STDIN));
 
-		if (strval($input) !== strval(intval($input))) 
+		if (!in_array(strtolower($input),['y','n'])) 
 		{
-			die("Salah memasukan format, pastikan hanya angka".PHP_EOL);
+			die("Pilihan tidak diketahui".PHP_EOL);
 		}
 
-		return (!$input) ? die('Range Story masih kosong'.PHP_EOL) : $input;
+		return (!$input) ? die('Pilihan masih Kosong'.PHP_EOL) : $input;
 	}
 
 	public function GetInputTargets($data = false) {
 
 		if ($data) return $data;
 
-		echo "Masukan Akun target [pisah dengan tanda (,)] : ".PHP_EOL;
-		echo "Ex : johny,awakening,travelergest".PHP_EOL;		
+		echo "Masukan Akun target pisah dengan tanda , : ".PHP_EOL;	
 
 		$input = trim(fgets(STDIN));
 
@@ -134,8 +153,9 @@ Class InstagramStoryVoteKuy
 	public $targets;
 
 	public $current_loop = 0;
+	public $current_loop_message = 0;	
 
-	public $next_id;
+	public $next_id = array();
 
 	public function Auth($data) 
 	{
@@ -145,6 +165,20 @@ Class InstagramStoryVoteKuy
 			echo "[INFO] Login Menggunakan Akun yang sudah ada".PHP_EOL;
 
 			$results = self::ReadPreviousData($data['username'][0]);
+
+			$choice_relog = InputHelper::GetInputRelog();
+
+			if ($choice_relog == 'y') {
+
+				$relog_data['username'] = $results['username'];
+				$relog_data['password'] = $results['password'];
+				$relog_data['question_message'] = $results['question_message'];
+				$relog_data['limit_per_day'] = $results['limit_per_day'];
+				$relog_data['only_vote'] = $results['only_vote'];			
+				$relog_data['targets'] = $results['targets'];
+
+				return self::Auth($relog_data);
+			}
 
 			echo "[INFO] Check Live Cookie".PHP_EOL;
 
@@ -167,6 +201,8 @@ Class InstagramStoryVoteKuy
 				$required['security_code'] = InputHelper::GetInputSecurityCode();
 
 				$results = InstagramAuthAPI::CheckPointSolve($required);
+
+				if (!is_array($results)) die($results);
 			}
 
 			echo "Menyimpan Data Login".PHP_EOL;
@@ -174,7 +210,7 @@ Class InstagramStoryVoteKuy
 			$results['password'] = $data['password'];
 			$results['question_message'] = $data['question_message'];
 			$results['limit_per_day'] = $data['limit_per_day'];
-			$results['range_story'] = $data['range_story'];
+			$results['only_vote'] = $data['only_vote'];			
 			$results['targets'] = $data['targets'];
 			self::SaveLogin($results);
 		}
@@ -185,7 +221,7 @@ Class InstagramStoryVoteKuy
 
 		$this->question_message = $results['question_message'];
 		$this->limit_per_day = $results['limit_per_day'];
-		$this->range_story = $results['range_story'];
+		$this->only_vote = $results['only_vote'];		
 		$this->targets = $results['targets'];
 	}
 
@@ -265,7 +301,7 @@ Class InstagramStoryVoteKuy
 			$this->current_loop = $this->current_loop + 1;
 		}
 
-		return $targetlist[$index];
+		return trim($targetlist[$index]);
 	}
 
 	public function GetFollowersTarget()
@@ -275,28 +311,83 @@ Class InstagramStoryVoteKuy
 
 		$useridtarget = InstagramResourceUser::GetUserIdByScraping($username);
 
+		//var_dump($this->next_id);
+
 		$type = false;
-		if ($this->next_id[$useridtarget]) {
-			$type = 'Lanjut ';
+		$next_id = false;
+		if (!empty($this->next_id[$useridtarget])) {
+			$type = 'Lanjut-'.$this->next_id[$useridtarget."_count"].' ';
+			$this->next_id[$useridtarget."_count"] = $this->next_id[$useridtarget."_count"]+1;
+			$next_id = $this->next_id[$useridtarget];
+		}else{
+			$this->next_id[$useridtarget."_count"] = 1;
 		}
 
 		echo "[INFO] {$type}Mendapatkan List Followers {$username}".PHP_EOL;
 
-		$readfollowers = new InstagramUserFollowersAPI();
+		$results = self::GetFollowersTargetByWeb($useridtarget,$next_id);
+		// $results = self::GetFollowersTargetByAPI($useridtarget,$next_id);
+
+		echo "[INFO] Berhasil mendapatkan ".count($results)." User".PHP_EOL;
+
+		return $results;
+	}
+
+	public function GetFollowersTargetByWeb($useridtarget,$next_id)
+	{
+		$readfollowers = new InstagramUserFollowers();
 		$readfollowers->SetCookie($this->cookie);
-		$userlist = $readfollowers->Process($useridtarget,$this->next_id[$useridtarget]);
+		$userlist = $readfollowers->Process($useridtarget,$next_id);
+
+		// echo json_encode($userlist);
+		// exit;
 
 		/* get userlist failed */
 		if (!$userlist) return false;
 
+		$results = array();
+		$edges = $userlist['data']['user']['edge_followed_by']['edges'];
+		foreach ($edges as $node) {
+			$user = $node['node'];
+			$reel = $user['reel'];
+
+			if($user['is_private']) continue;
+			if(!$reel['latest_reel_media']) continue;
+
+			$results[] = [
+				'userid' => $user['id'],
+				'username' => $user['username']
+			];
+		}
+
+		$next_page = $userlist['data']['user']['edge_followed_by']['page_info'];
+		if ($next_page['has_next_page']) {
+			$this->next_id[$useridtarget] = $next_page['end_cursor'];
+		}else{
+			$this->next_id[$useridtarget] = false;
+		}
+
+		return $results;
+	}
+
+	public function GetFollowersTargetByAPI($useridtarget,$next_id)
+	{
+		$readfollowers = new InstagramUserFollowersAPI();
+		$readfollowers->SetCookie($this->cookie);
+		$userlist = $readfollowers->Process($useridtarget,$next_id);
+
+		/* get userlist failed */
+		if (!$userlist) return false;
+
+		$results = array();
 		foreach ($userlist['users'] as $key => $user) {
 
 			if($user['is_private']) continue;
 			if(!$user['latest_reel_media']) continue;
 
 			$results[] = [
-			'userid' => $user['pk'],
-			'username' => $user['username']
+				'userid' => $user['pk'],
+				'username' => $user['username']
 			];
 
 		}
@@ -307,8 +398,6 @@ Class InstagramStoryVoteKuy
 			$this->next_id[$useridtarget] = false;
 		}
 
-		echo "[INFO] Berhasil mendapatkan ".count($results)." User".PHP_EOL;
-
 		return $results;
 	}
 
@@ -316,6 +405,9 @@ Class InstagramStoryVoteKuy
 	{
 
 		$FollowersList = self::GetFollowersTarget();
+
+		/* get FollowersList failed */
+		if (!$FollowersList) return 'failed_get_followers_list';
 
 		$readstory = new InstagramFeedStoryAPI();
 		$readstory->SetCookie($this->cookie);
@@ -327,8 +419,17 @@ Class InstagramStoryVoteKuy
 
 			$StoryUser = $readstory->GetStoryUser($user['userid']);
 
+			if (!$StoryUser) return false;
 			foreach ($StoryUser as $story) {
-				$StoryList[] = $story;
+
+				/* remove not story vote */
+				if ($this->only_vote == 'y') {
+					if ($story['story_detail']['type'] !== 'default') {
+						$StoryList[] = $story;
+					}
+				}else{
+					$StoryList[] = $story;
+				}
 			}
 		}
 
@@ -339,6 +440,18 @@ Class InstagramStoryVoteKuy
 
 	public function SeenStory($story)
 	{
+
+		$count_today = self::ReadLogDaily(strtolower($this->username));
+
+		if ($count_today >= $this->limit_per_day) {
+			$startdate = date('Y-m-d H:i:s'); 
+			$enddate = date('Y-m-d')."23:59:59"; 
+			$remain_today = strtotime($enddate)-strtotime($startdate); 
+
+			echo "[INFO] Telah mencapai batas limit perharinya, delay selama {$remain_today} detik".PHP_EOL;
+
+			sleep($remain_today);
+		}
 
 		/* sync story data with log file */
 		$sync = self::SyncStory($story['id']);
@@ -354,45 +467,59 @@ Class InstagramStoryVoteKuy
 		$seenstory->SetCookie($this->cookie);
 		$seenstory->SetOption([
 			'story_questions' => [
-			'active' => true,
-			'message' => self::GetMessage()
+				'active' => true,
+				'message' => self::GetShuffleMessage($this->current_loop_message)
 			],
 			'story_polls' => [
-			'active' => true,
-			'vote' => rand(0,1)
+				'active' => true,
+				'vote' => rand(0,1)
 			],
 			'story_countdowns' => [
-			'active' => true
+				'active' => true
 			],
 			'story_sliders' => [
-			'active' => true,
-			'vote' => '1'
+				'active' => true,
+				'vote' => '1'
 			],
 			'story_quizs' => [
-			'active' => true
+				'active' => true
 			],
-			]);		
+		]);		
 
 		$results = $seenstory->SeenStoryByAPI($story);
 
 		if ($results != false) {
-			echo "[SUCCESS] Success Seen Story {$story['id']} | Type : {$results['story_type']}".PHP_EOL;
+			echo "[SUCCESS] Success Seen Story {$story['id']} | Type : {$story['story_detail']['type']}".PHP_EOL;
 			echo "[INFO] Response : {$results['story_response']}".PHP_EOL;
 			self::SaveLog(strtolower($this->username),$story['id']);
+			self::SaveLogDaily(strtolower($this->username),$story['id']);
+
+
+			if ($story['story_detail']['type'] == 'questions') {
+				return 'questions';
+			}
 
 			return true;
 		}else{
 			echo "[FAILED] Failed Seen Story {$story['id']}".PHP_EOL;
-			return true;
+			return false;
 		}
 	}
 
-	public function GetMessage()
+	public function GetShuffleMessage($index)
 	{
 
-		$message = explode(',', $this->question_message);
+		$message = explode('|', $this->question_message);
 
-		return $message[array_rand($message)];
+		/* reset index to 0 */
+		if ($index >= count($message)) {
+			$index = 0;
+			$this->current_loop_message = 1;
+		}else{
+			$this->current_loop_message = $this->current_loop_message + 1;
+		}
+
+		return trim($message[$index]);		
 	}
 
 	public function SyncStory($storyid)
@@ -412,14 +539,14 @@ Class InstagramStoryVoteKuy
 	{		
 
 		$logfilename = "log/story-data-svk-{$identity}-".date('m-Y');
-		$log_url = array();
+		$log_id = array();
 		if (file_exists($logfilename)) 
 		{
-			$log_url = file_get_contents($logfilename);
-			$log_url  = explode(PHP_EOL, $log_url);
+			$log_id = file_get_contents($logfilename);
+			$log_id  = explode(PHP_EOL, $log_id);
 		}
 
-		return $log_url;
+		return $log_id;
 	}
 
 	public function SaveLog($identity,$datastory)
@@ -427,6 +554,24 @@ Class InstagramStoryVoteKuy
 		return file_put_contents("log/story-data-svk-{$identity}-".date('m-Y'), $datastory.PHP_EOL, FILE_APPEND);
 	}	
 
+	public function ReadLogDaily($identity)
+	{		
+
+		$logfilename = "log/count-story-data-svk-{$identity}-".date('d-m-Y');
+		$log_id = array();
+		if (file_exists($logfilename)) 
+		{
+			$log_id = file_get_contents($logfilename);
+			$log_id  = explode(PHP_EOL, $log_id);
+		}
+
+		return count($log_id) - 1;
+	}
+
+	public function SaveLogDaily($identity,$datastory)
+	{
+		return file_put_contents("log/count-story-data-svk-{$identity}-".date('d-m-Y'), $datastory.PHP_EOL, FILE_APPEND);
+	}	
 }
 
 Class Worker
@@ -443,7 +588,7 @@ Class Worker
 
 			$account['question_message'] = InputHelper::GetInputStoryQuestionsMessage();
 			$account['limit_per_day'] = InputHelper::GetInputLimitPerday();
-			$account['range_story'] = InputHelper::GetInputRangeStory();
+			$account['only_vote'] = InputHelper::GetInputOnlyVote();			
 			$account['targets'] = InputHelper::GetInputTargets();
 		}
 
@@ -451,6 +596,7 @@ Class Worker
 		$delay = 10;
 		$delaystory_default = 10;
 		$delaystory = 10;
+		$delay_question = 60; /* 1 minutes delay question */
 
 		/* Call Class */
 		$Working = new InstagramStoryVoteKuy();
@@ -470,11 +616,12 @@ Class Worker
 
 			if (empty($StoryList)) {
 
-				// echo "[INFO] Tidak ditemukan Story, Coba lagi setelah {$delaystory} detik".PHP_EOL;
-				// sleep($delaystory);
+				// echo "[SKIP] Tidak ditemukan Story untuk diproses".PHP_EOL;
+				echo "[INFO] Tidak ditemukan Story, Coba lagi setelah {$delaystory} detik".PHP_EOL;
+				sleep($delaystory);
 
-				// $delaystory = $delaystory*rand(2,3);
-				// $nostorystatus++;
+				$delaystory = $delaystory*rand(2,3);
+				$nostorystatus++;
 
 				continue;
 			}
@@ -491,9 +638,18 @@ Class Worker
 
 				if ($process_seen) 
 				{
+
+					if ($process_seen == 'questions') {
+						$delay = $delay_question;
+					}
+
 					echo "[INFO] Delay {$delay}".PHP_EOL;
 					sleep($delay);
-					$delay = $delay+5;
+
+					if ($process_seen != 'questions') {
+						$delay = $delay+5;
+					}
+
 					$seenstory++;
 				}
 

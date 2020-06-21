@@ -9,11 +9,7 @@ $useridtarget = '13320596140';
 
 $readfollowers = new InstagramUserFollowersAPI();
 $readfollowers->SetCookie($datacookie);
-$results = $readfollowers->Process([
-  'userid' => $useridtarget,
-  'limit' => 1,
-  'extract_type' => 'story'
-  ]);
+$results = $readfollowers->Process($useridtarget);
 
 echo "<pre>";
 var_dump($results);
