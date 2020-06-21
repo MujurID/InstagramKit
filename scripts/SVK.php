@@ -1,7 +1,7 @@
 <?php  
 /**
-* InstagramStoryVoteKuy v1.0
-* Last Update 20 Juni 2020
+* InstagramStoryVoteKuy
+* Last Update 21 Juni 2020
 * Author : Faanteyki
 */
 require "../vendor/autoload.php";
@@ -354,10 +354,7 @@ Class InstagramStoryVoteKuy
 			if($user['is_private']) continue;
 			if(!$reel['latest_reel_media']) continue;
 
-			$results[] = [
-				'userid' => $user['id'],
-				'username' => $user['username']
-			];
+			$results[] = $user['id'];
 		}
 
 		$next_page = $userlist['data']['user']['edge_followed_by']['page_info'];
@@ -386,8 +383,8 @@ Class InstagramStoryVoteKuy
 			if(!$user['latest_reel_media']) continue;
 
 			$results[] = [
-				'userid' => $user['pk'],
-				'username' => $user['username']
+			'userid' => $user['pk'],
+			'username' => $user['username']
 			];
 
 		}
@@ -413,23 +410,22 @@ Class InstagramStoryVoteKuy
 		$readstory->SetCookie($this->cookie);
 
 		$StoryList = array();
-		foreach ($FollowersList as $user) {
 
-			// echo "[INFO] Membaca Feed Story User {$user['username']} <-------------".PHP_EOL;
+		echo "[INFO] Membaca Feed Story dari ".count($FollowersList)." User".PHP_EOL;
 
-			$StoryUser = $readstory->GetStoryUser($user['userid']);
+		$StoryUser = $readstory->GetStoryUser($FollowersList);
 
-			if (!$StoryUser) return false;
-			foreach ($StoryUser as $story) {
+		if (!$StoryUser) return false;
+		
+		foreach ($StoryUser as $story) {
 
-				/* remove not story vote */
-				if ($this->only_vote == 'y') {
-					if ($story['story_detail']['type'] !== 'default') {
-						$StoryList[] = $story;
-					}
-				}else{
+			/* remove not story vote */
+			if ($this->only_vote == 'y') {
+				if ($story['story_detail']['type'] !== 'default') {
 					$StoryList[] = $story;
 				}
+			}else{
+				$StoryList[] = $story;
 			}
 		}
 
@@ -467,33 +463,33 @@ Class InstagramStoryVoteKuy
 		$seenstory->SetCookie($this->cookie);
 		$seenstory->SetOption([
 			'story_questions' => [
-				'active' => true,
-				'message' => self::GetShuffleMessage($this->current_loop_message)
+			'active' => true,
+			'message' => self::GetShuffleMessage($this->current_loop_message)
 			],
 			'story_polls' => [
-				'active' => true,
-				'vote' => rand(0,1)
+			'active' => true,
+			'vote' => '1'
 			],
 			'story_countdowns' => [
-				'active' => true
+			'active' => true
 			],
 			'story_sliders' => [
-				'active' => true,
-				'vote' => '1'
+			'active' => true,
+			'vote' => '1'
 			],
 			'story_quizs' => [
-				'active' => true
+			'active' => true
 			],
-		]);		
+			]);		
 
 		$results = $seenstory->SeenStoryByAPI($story);
 
-		if ($results != false) {
+		if ($results != false) {			
+
 			echo "[SUCCESS] Success Seen Story {$story['id']} | Type : {$story['story_detail']['type']}".PHP_EOL;
 			echo "[INFO] Response : {$results['story_response']}".PHP_EOL;
 			self::SaveLog(strtolower($this->username),$story['id']);
 			self::SaveLogDaily(strtolower($this->username),$story['id']);
-
 
 			if ($story['story_detail']['type'] == 'questions') {
 				return 'questions';
@@ -579,7 +575,7 @@ Class Worker
 	public function Run()
 	{
 
-		echo " --- Instagram Story Vote Kuy ---".PHP_EOL;
+		echo "Instagram Story Vote Kuy".PHP_EOL;
 
 		$account['username'] = InputHelper::GetInputUsername();
 
@@ -616,12 +612,12 @@ Class Worker
 
 			if (empty($StoryList)) {
 
-				// echo "[SKIP] Tidak ditemukan Story untuk diproses".PHP_EOL;
-				echo "[INFO] Tidak ditemukan Story, Coba lagi setelah {$delaystory} detik".PHP_EOL;
-				sleep($delaystory);
+				echo "[SKIP] Tidak ditemukan Story untuk diproses".PHP_EOL;
+				// echo "[INFO] Tidak ditemukan Story, Coba lagi setelah {$delaystory} detik".PHP_EOL;
+				// sleep($delaystory);
 
-				$delaystory = $delaystory*rand(2,3);
-				$nostorystatus++;
+				// $delaystory = $delaystory+5;
+				// $nostorystatus++;
 
 				continue;
 			}
@@ -640,13 +636,11 @@ Class Worker
 				{
 
 					if ($process_seen == 'questions') {
-						$delay = $delay_question;
-					}
-
-					echo "[INFO] Delay {$delay}".PHP_EOL;
-					sleep($delay);
-
-					if ($process_seen != 'questions') {
+						echo "[INFO] Delay {$delay_question}".PHP_EOL;
+						sleep($delay_question);
+					}else{
+						echo "[INFO] Delay {$delay}".PHP_EOL;
+						sleep($delay);
 						$delay = $delay+5;
 					}
 

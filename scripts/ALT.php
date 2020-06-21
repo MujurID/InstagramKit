@@ -1,7 +1,7 @@
 <?php  
 /**
-* InstagramLikeTimeLine v1.2
-* Last Update 10 Juni 2020
+* Instagram Auto Like TimeLine
+* Last Update 21 Juni 2020
 * Author : Faanteyki
 */
 
@@ -65,21 +65,24 @@ Class InstagramAutoLikeTIme
 	public function Auth($data) 
 	{
 
-		echo "Login <-------------".PHP_EOL;
-
 		if (is_array($data['username'])) {
+
+			echo "[INFO] Login Menggunakan Cookie".PHP_EOL;
 
 			$results = self::ReadPreviousData($data['username'][0]);
 
-			echo "Login Menggunakan Cookie <-------------".PHP_EOL;
+			echo "[INFO] Check Live Cookie".PHP_EOL;
+
+			$check_cookie = InstagramChecker::CheckLiveCookie($results['cookie']);
+			if (!$check_cookie) die("[ERROR] cookie tidak bisa digunakan".PHP_EOL);
 
 		}else{	
 
-			echo "Login Menggunakan Username dan Password <-------------".PHP_EOL;
+			echo "[INFO] Login Menggunakan Username dan Password".PHP_EOL;
 
 			$results = InstagramAuth::AuthLoginByWebAjax($data['username'],$data['password']);			
 
-			echo "Menyimpan Data Login <-------------".PHP_EOL;
+			echo "[INFO] Menyimpan Data Login".PHP_EOL;
 
 			self::SaveLogin($results);
 		}
@@ -155,49 +158,48 @@ Class InstagramAutoLikeTIme
 	public function GetFeed()
 	{
 
-		echo "Membaca Feed Timeline <-------------".PHP_EOL;
+		echo "[INFO] Membaca Feed Timeline".PHP_EOL;
 
 		$FeedTimeLine = new InstagramFeedTimeLine();
 		$FeedTimeLine->SetCookie($this->cookie);
-		$FeedTimeLine->SetCSRF($this->csrftoken);
 
 		$results = $FeedTimeLine->GetFeedTimeLine([
 			'type' => 'graphql',
 			'deep' => 3
-		]);
+			]);
 
 		if (!$results) return 'fail_get_feed';
 
-		echo "Berhasil Mendapatkan Feed <-------------".PHP_EOL;
+		echo "[INFO] Berhasil Mendapatkan Feed".PHP_EOL;
 
 		return self::SyncPost($results);
 	}
 
 	public function LikePost($post)
 	{
-		echo "Proses Like Post {$post['username']}||{$post['id']} <-------------".PHP_EOL;
+		echo "[INFO] Proses Like Post {$post['username']}||{$post['id']}".PHP_EOL;
 
 		$likepost = new InstagramPostLike();
 		$likepost->SetCookie($this->cookie);
-		$likepost->SetCSRF($this->csrftoken);
-		$process = $likepost->LikePostByWeb($post);
+		$process = $likepost->Process($post['id']);
 
-		if ($process != false) {
-			echo "Sukses Like Post {$post['url']}".PHP_EOL;
+		if ($process['status'] != false) {
+			echo "[SUCCESS] Sukses Like Post {$post['url']}".PHP_EOL;
 		}else{
-			echo "[!Gagal!] Like Post {$post['url']}".PHP_EOL;
+			echo "[FAILED] Like Post {$post['url']}".PHP_EOL;
+			echo "[INFO] Response : {$process['response']}".PHP_EOL;			
 		}
 	}
 
 	public function SyncPost($postdata)
 	{
 
-		echo "Sync Feed Post <-------------".PHP_EOL;
+		echo "Sync Feed Post".PHP_EOL;
 
 		$results = array();
 		foreach ($postdata as $post) {
 			if ($post['haslike']) {
-				echo "Skip {$post['id']}, Post sudah dilike. ".PHP_EOL;
+				echo "[SKIP] Post {$post['id']} sudah dilike. ".PHP_EOL;
 				continue;
 			}
 
@@ -213,7 +215,7 @@ Class Worker
 	public function Run()
 	{
 
-		echo " --- Instagram Auto Like TimeLine v1.3 ---".PHP_EOL;
+		echo "Instagram Auto Like TimeLine".PHP_EOL;
 
 		$account['username'] = InputHelper::GetInputUsername();
 
@@ -251,7 +253,7 @@ Class Worker
 				if ($FeedList == 'fail_get_feed') {
 					$nogetfeed++;
 				}
-				echo "Tidak ditemukan Post, Coba lagi setelah {$delayfeed} detik".PHP_EOL;
+				echo "[INFO] Tidak ditemukan Post, Coba lagi setelah {$delayfeed} detik".PHP_EOL;
 				sleep($delayfeed);
 
 				$delayfeed = $delayfeed*rand(2,3);
@@ -270,7 +272,7 @@ Class Worker
 
 				$Working->LikePost($story);
 
-				echo "Delay {$delay} <--------------".PHP_EOL;
+				echo "[INFO] Delay {$delay}".PHP_EOL;
 				sleep($delay);
 
 				$delay = $delay+5;

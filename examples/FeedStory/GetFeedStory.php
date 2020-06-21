@@ -5,10 +5,12 @@ use Riedayme\InstagramKit\InstagramFeedStory;
 
 $datacookie = 'yourcookie';
 
+$userid = '13320596140';
+
 $process = new InstagramFeedStory();
 $process->SetCookie($datacookie);
 // $StoryList = $process->GetStoryList();
-$StoryList[] = ['id' => '13320596140']; /* for single user */
+$StoryList[] = ['id' => $userid]; /* for single user */
 $results = $process->GetStoryUser($StoryList);
 
 echo "<pre>";

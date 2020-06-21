@@ -9,11 +9,8 @@ $postid = '2332344911195799233';
 
 $likepost = new InstagramPostLike();
 $likepost->SetCookie($datacookie);
-$likepost->SetCSRF($datacookie);
 
-$results = $likepost->Process([
-	'id' => $postid
-	]);
+$results = $likepost->Process($postid);
 
 echo "<pre>";
 var_dump($results);

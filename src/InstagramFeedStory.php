@@ -75,8 +75,8 @@ Class InstagramFeedStory
 			$username = $postdata['node']['user']['username'];
 
 			$extract[] = [
-				'id' => $userid,
-				'username' => $username
+			'id' => $userid,
+			'username' => $username
 			];
 
 		}
@@ -142,13 +142,53 @@ Class InstagramFeedStory
 				$media = ($type == 'image') ? $story['display_url'] : $story['video_resources'][0]['src'];
 				$taken_at = $story['taken_at_timestamp'];
 
+				/** get polling,question,and other here if exist */
+				$story_data = []; /* reset value */
+				$story_data['type'] = 'default';
+
+				if (!empty($story['tappable_objects'][0])) {
+
+					if ($story['tappable_objects'][0]['__typename'] == 'GraphTappableStoryPoll') 
+					{
+
+						$read_polls = $story['tappable_objects'][0];
+
+						$story_data['type'] = 'polls';
+						$story_data['id'] = $read_polls['id'];
+						$story_data['question'] = $read_polls['question'];
+						$story_data['viewer_vote'] = (!empty($read_polls['viewer_vote']) ? true : false);		
+					}
+
+					elseif ($story['tappable_objects'][0]['__typename'] == 'GraphTappableFallback') 
+					{
+						
+						$read_tappable = $story['tappable_objects'][0];
+
+						if ($read_tappable['tappable_type'] == 'question') 
+						{
+							$story_data['type'] = 'questions';
+						}
+						elseif ($read_tappable['tappable_type'] == 'countdown') 
+						{
+							$story_data['type'] = 'countdowns';
+						}
+						elseif ($read_tappable['tappable_type'] == 'slider')
+						{
+							$story_data['type'] = 'sliders';
+						}
+
+					}
+
+				}
+
 				$extract[] = [
-					'id' => $id,
-					'userid' => $userid,				
-					'username' => $username,
-					'media' => $media,
-					'type' => $type,
-					'taken_at' => $taken_at
+				'id' => $id,
+				'userid' => $userid,				
+				'username' => $username,
+				'media' => $media,
+				'type' => $type,
+				'taken_at' => $taken_at,
+				'story_detail' => $story_data,
 				];
 			}
 

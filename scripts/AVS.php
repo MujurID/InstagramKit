@@ -1,7 +1,7 @@
 <?php  
 /**
-* InstagramViewStory v1.1
-* Last Update 10 Juni 2020
+* Instagram Auto View Story
+* Last Update 21 Juni 2020
 * Author : Faanteyki
 */
 require "../vendor/autoload.php";
@@ -65,21 +65,24 @@ Class InstagramAutoViewStory
 	public function Auth($data) 
 	{
 
-		echo "Login <-------------".PHP_EOL;
-
 		if (is_array($data['username'])) {
+
+			echo "[INFO] Login Menggunakan Cookie".PHP_EOL;
 
 			$results = self::ReadPreviousData($data['username'][0]);
 
-			echo "Login Menggunakan Cookie <-------------".PHP_EOL;
+			echo "[INFO] Check Live Cookie".PHP_EOL;
+
+			$check_cookie = InstagramChecker::CheckLiveCookie($results['cookie']);
+			if (!$check_cookie) die("[ERROR] cookie tidak bisa digunakan".PHP_EOL);
 
 		}else{	
 
-			echo "Login Menggunakan Username dan Password <-------------".PHP_EOL;
+			echo "[INFO] Login Menggunakan Username dan Password".PHP_EOL;
 
 			$results = InstagramAuth::AuthLoginByWebAjax($data['username'],$data['password']);			
 
-			echo "Menyimpan Data Login <-------------".PHP_EOL;
+			echo "[INFO] Menyimpan Data Login".PHP_EOL;
 
 			self::SaveLogin($results);
 		}
@@ -156,48 +159,46 @@ Class InstagramAutoViewStory
 	public function GetStory()
 	{
 
-		echo "Membaca Feed ALl Story <-------------".PHP_EOL;
+		echo "[INFO] Membaca Feed ALl Story".PHP_EOL;
 
 		$FeedStory = new InstagramFeedStory();
 		$FeedStory->SetCookie($this->cookie);
-		$FeedStory->SetCSRF($this->csrftoken);
-		$FeedStory->GetQueryHash();				
 		$StoryList = $FeedStory->GetStoryList();
 		
 		if (!$StoryList) return 'fail_get_all_story';
 
-		echo "Membaca Feed Story User <-------------".PHP_EOL;
+		echo "[INFO] Membaca Feed Story User".PHP_EOL;
 
 		$StoryUser = $FeedStory->GetStoryUser($StoryList);
 
 		if (!$StoryUser) return 'fail_get_story_user';
 
-		echo "Berhasil Mendapatkan Feed Story <-------------".PHP_EOL;
+		echo "[INFO] Berhasil Mendapatkan Feed Story".PHP_EOL;
 
 		return self::SyncStory($StoryUser);
 	}
 
 	public function SeenStory($story)
 	{
-		echo "Proses Seen Story {$story['username']}||{$story['id']} <-------------".PHP_EOL;
+		echo "[INFO] Proses Seen Story {$story['username']}||{$story['id']}".PHP_EOL;
 
 		$seenstory = new InstagramSeenStory();
 		$seenstory->SetCookie($this->cookie);
-		$seenstory->SetCSRF($this->csrftoken);
-		$process = $seenstory->SeenStoryByWeb($story);
+		$process = $seenstory->Process($story);
 
-		if ($process != false) {
-			echo "Success Seen Story {$story['id']} <-------------".PHP_EOL;
+		if ($process['status'] != false) {
+			echo "[SUCCESS] Seen Story {$story['id']}".PHP_EOL;
 			self::SaveLog($this->username,$story['id']);
 		}else{
-			echo "Failed".PHP_EOL;
+			echo "[FAILED] Seen Story {$story['id']}".PHP_EOL;
+			echo "[INFO] Response : {$process['response']}".PHP_EOL;			
 		}
 	}
 
 	public function SyncStory($storydata)
 	{
 
-		echo "Sync Story User <-------------".PHP_EOL;
+		echo "[INFO] Sync Story User".PHP_EOL;
 
 		$ReadLog = self::ReadLog($this->username);
 
@@ -215,7 +216,7 @@ Class InstagramAutoViewStory
 
 		/* Update Log Data Fresh Story */
 		if (count($storydata) != count($ReadLog) - 1) {
-			echo "Update Log Story <-------------".PHP_EOL;
+			echo "Update Log Story".PHP_EOL;
 			self::SaveLog($this->username,implode(PHP_EOL, $freshstory),false);
 		}
 
@@ -251,7 +252,7 @@ Class Worker
 	public function Run()
 	{
 
-		echo " --- Instagram Auto View Story v1.1 ---".PHP_EOL;
+		echo "Instagram Auto View Story".PHP_EOL;
 
 		$account['username'] = InputHelper::GetInputUsername();
 
@@ -290,7 +291,7 @@ Class Worker
 					$nogetfeed++;
 				}
 
-				echo "Tidak ditemukan Story, Coba lagi setelah {$delaystory} detik".PHP_EOL;
+				echo "[INFO] Tidak ditemukan Story, Coba lagi setelah {$delaystory} detik".PHP_EOL;
 				sleep($delaystory);
 
 				$delaystory = $delaystory*rand(2,3);
@@ -309,7 +310,7 @@ Class Worker
 
 				$Working->SeenStory($story);
 
-				echo "Delay {$delay} <--------------".PHP_EOL;
+				echo "[INFO] Delay {$delay}".PHP_EOL;
 				sleep($delay);
 
 				$delay = $delay+5;

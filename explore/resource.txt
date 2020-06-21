@@ -42,3 +42,29 @@ GetInputStoryQuestionsMessage
 GetInputLimitPerday
 GetInputRangeStory
 GetInputTargets
+
+/**  
+ * 
+// $url = 'https://i.instagram.com/api/v1/feed/user/'.$userid.'/reel_media/';
+
+
+-- instagrma like comment web
+https://www.instagram.com/web/comments/like/18054864409215194/
+
+https://www.instagram.com/web/comments/like/17880936511641789/
+
+-- instagram get comment list next page (max 35) / CBpyqQhFZyP = post code
+https://www.instagram.com/graphql/query/?query_hash=bc3296d1ce80a24b1b6e40b1e72903f5&variables={"shortcode":"CBpyqQhFZyP","first":35,"after":""}
+
+https://www.instagram.com/graphql/query/?query_hash=bc3296d1ce80a24b1b6e40b1e72903f5&variables={"shortcode":"CBpyqQhFZyP","first":13,"after":"QVFDNVNYdEtkSTNlQllRUURXaGRkQ2xHLXRJeHRBQmZQdUxDMk5QYzBkOExCTzJYQ1JPV0t1ckl3TU9vbjZDWWhTWVRKM0pOcDkzM3hHT3JOV2szeEk1bg=="}
+
+-- ig send comment to post 2332344911195799233 = post id
+curl 'https://www.instagram.com/web/comments/2332344911195799233/add/' -H 'authority: www.instagram.com' -H 'x-ig-www-claim: hmac.AR2sQMxsgNFPzh-C8AImL3f8L68GuOzLVAEn7wXHAeEcnCvM' -H 'x-instagram-ajax: 0cd6979f9873-hot' -H 'content-type: application/x-www-form-urlencoded' -H 'accept: */*' -H 'x-requested-with: XMLHttpRequest' -H 'user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36' -H 'x-csrftoken: uiqcIhokFDNG22jb2rDeigpDYpMsE48p' -H 'x-ig-app-id: 936619743392459' -H 'origin: https://www.instagram.com' -H 'sec-fetch-site: same-origin' -H 'sec-fetch-mode: cors' -H 'referer: https://www.instagram.com/p/CBeJ1blg_7B/' -H 'accept-encoding: gzip, deflate, br' -H 'accept-language: en-US,en;q=0.9,id;q=0.8' -H 'cookie: ig_did=D0E2DBA9-2CEE-459D-B501-A3A1AC6A1553; mid=XulV_QAEAAFxBhSklSTSSy1C2dbV; fbm_124024574287414=base_domain=.instagram.com; shbid=8056; ds_user_id=31310607724; csrftoken=uiqcIhokFDNG22jb2rDeigpDYpMsE48p; sessionid=31310607724%3AtOAuKq0t0y0gKC%3A6; rur=VLL; shbts=1592731931.319305; urlgen="{\"180.244.234.177\": 7713\054 \"180.244.235.221\": 7713}:1jmzJl:EFSo44EpQyqzbg-_-3JVNLcHKZ4"' --data 'comment_text=hehe&replied_to_comment_id=' --compressed
+
+-- ig send reply comment 17893046791541968 = comment id
+curl 'https://www.instagram.com/web/comments/2332344911195799233/add/' -H 'authority: www.instagram.com' -H 'x-ig-www-claim: hmac.AR2sQMxsgNFPzh-C8AImL3f8L68GuOzLVAEn7wXHAeEcnCvM' -H 'x-instagram-ajax: 0cd6979f9873-hot' -H 'content-type: application/x-www-form-urlencoded' -H 'accept: */*' -H 'x-requested-with: XMLHttpRequest' -H 'user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36' -H 'x-csrftoken: uiqcIhokFDNG22jb2rDeigpDYpMsE48p' -H 'x-ig-app-id: 936619743392459' -H 'origin: https://www.instagram.com' -H 'sec-fetch-site: same-origin' -H 'sec-fetch-mode: cors' -H 'referer: https://www.instagram.com/p/CBeJ1blg_7B/' -H 'accept-encoding: gzip, deflate, br' -H 'accept-language: en-US,en;q=0.9,id;q=0.8' -H 'cookie: ig_did=D0E2DBA9-2CEE-459D-B501-A3A1AC6A1553; mid=XulV_QAEAAFxBhSklSTSSy1C2dbV; fbm_124024574287414=base_domain=.instagram.com; shbid=8056; ds_user_id=31310607724; csrftoken=uiqcIhokFDNG22jb2rDeigpDYpMsE48p; sessionid=31310607724%3AtOAuKq0t0y0gKC%3A6; rur=VLL; shbts=1592731931.319305; urlgen="{\"180.244.234.177\": 7713\054 \"180.244.235.221\": 7713}:1jmzL3:SCaRIzr59GZUg-ChnqZGxq4bINc"' --data 'comment_text=%40riedayme+bah+simsalabim&replied_to_comment_id=17893046791541968' --compressed
+
+-- instagram get reply comment list (max 35)
+https://www.instagram.com/graphql/query/?query_hash=1ee91c32fc020d44158a3192eda98247&variables={"comment_id":"17893046791541968","first":35,"after":""}
+
+https://www.instagram.com/graphql/query/?query_hash=1ee91c32fc020d44158a3192eda98247&variables={"comment_id":"17893046791541968","first":6,"after":"QVFCUy1RcmtzMjFZUWVENEItSHo2a3F1ZjJ0ejNJSzdXb3g5UlJvbTJMeEFjbjhPd2lOQ2g1WTNIR1BUdGpMVHVpQnpEY3dpaGN4WjI5dVZXTlBVeEVRSA=="}

@@ -1,0 +1,119 @@
+{
+  "data": {
+    "comment": {
+      "id": "17893046791541968",
+      "edge_threaded_comments": {
+        "count": 6,
+        "page_info": {
+          "has_next_page": false,
+          "end_cursor": null
+        },
+        "edges": [
+          {
+            "node": {
+              "id": "17857683010999361",
+              "text": "@riedayme bah simsalabim",
+              "created_at": 1592743499,
+              "owner": {
+                "id": "31310607724",
+                "profile_pic_url": "https://instagram.fakx2-1.fna.fbcdn.net/v/t51.2885-19/44884218_345707102882519_2446069589734326272_n.jpg?_nc_ht=instagram.fakx2-1.fna.fbcdn.net&_nc_ohc=CgRv3KotZXUAX9eYF_N&oh=d7ea8fa6fa65922c212ee39dfcb6cd24&oe=5F17A10F&ig_cache_key=YW5vbnltb3VzX3Byb2ZpbGVfcGlj.2",
+                "username": "riedayme"
+              },
+              "viewer_has_liked": false,
+              "edge_liked_by": {
+                "count": 0
+              },
+              "is_restricted_pending": false
+            }
+          },
+          {
+            "node": {
+              "id": "18148946782029831",
+              "text": "@riedayme wiw",
+              "created_at": 1592743551,
+              "owner": {
+                "id": "31310607724",
+                "profile_pic_url": "https://instagram.fakx2-1.fna.fbcdn.net/v/t51.2885-19/44884218_345707102882519_2446069589734326272_n.jpg?_nc_ht=instagram.fakx2-1.fna.fbcdn.net&_nc_ohc=CgRv3KotZXUAX9eYF_N&oh=d7ea8fa6fa65922c212ee39dfcb6cd24&oe=5F17A10F&ig_cache_key=YW5vbnltb3VzX3Byb2ZpbGVfcGlj.2",
+                "username": "riedayme"
+              },
+              "viewer_has_liked": false,
+              "edge_liked_by": {
+                "count": 0
+              },
+              "is_restricted_pending": false
+            }
+          },
+          {
+            "node": {
+              "id": "18143160184065476",
+              "text": "@riedayme amazing bos",
+              "created_at": 1592743559,
+              "owner": {
+                "id": "31310607724",
+                "profile_pic_url": "https://instagram.fakx2-1.fna.fbcdn.net/v/t51.2885-19/44884218_345707102882519_2446069589734326272_n.jpg?_nc_ht=instagram.fakx2-1.fna.fbcdn.net&_nc_ohc=CgRv3KotZXUAX9eYF_N&oh=d7ea8fa6fa65922c212ee39dfcb6cd24&oe=5F17A10F&ig_cache_key=YW5vbnltb3VzX3Byb2ZpbGVfcGlj.2",
+                "username": "riedayme"
+              },
+              "viewer_has_liked": false,
+              "edge_liked_by": {
+                "count": 0
+              },
+              "is_restricted_pending": false
+            }
+          },
+          {
+            "node": {
+              "id": "17844915368209432",
+              "text": "@riedayme ddddeng deng deng :v",
+              "created_at": 1592743566,
+              "owner": {
+                "id": "31310607724",
+                "profile_pic_url": "https://instagram.fakx2-1.fna.fbcdn.net/v/t51.2885-19/44884218_345707102882519_2446069589734326272_n.jpg?_nc_ht=instagram.fakx2-1.fna.fbcdn.net&_nc_ohc=CgRv3KotZXUAX9eYF_N&oh=d7ea8fa6fa65922c212ee39dfcb6cd24&oe=5F17A10F&ig_cache_key=YW5vbnltb3VzX3Byb2ZpbGVfcGlj.2",
+                "username": "riedayme"
+              },
+              "viewer_has_liked": false,
+              "edge_liked_by": {
+                "count": 0
+              },
+              "is_restricted_pending": false
+            }
+          },
+          {
+            "node": {
+              "id": "17880936511641789",
+              "text": "@riedayme hahaha",
+              "created_at": 1592743589,
+              "owner": {
+                "id": "31310607724",
+                "profile_pic_url": "https://instagram.fakx2-1.fna.fbcdn.net/v/t51.2885-19/44884218_345707102882519_2446069589734326272_n.jpg?_nc_ht=instagram.fakx2-1.fna.fbcdn.net&_nc_ohc=CgRv3KotZXUAX9eYF_N&oh=d7ea8fa6fa65922c212ee39dfcb6cd24&oe=5F17A10F&ig_cache_key=YW5vbnltb3VzX3Byb2ZpbGVfcGlj.2",
+                "username": "riedayme"
+              },
+              "viewer_has_liked": false,
+              "edge_liked_by": {
+                "count": 0
+              },
+              "is_restricted_pending": false
+            }
+          },
+          {
+            "node": {
+              "id": "17853400598094458",
+              "text": "@riedayme wowowow",
+              "created_at": 1592743597,
+              "owner": {
+                "id": "31310607724",
+                "profile_pic_url": "https://instagram.fakx2-1.fna.fbcdn.net/v/t51.2885-19/44884218_345707102882519_2446069589734326272_n.jpg?_nc_ht=instagram.fakx2-1.fna.fbcdn.net&_nc_ohc=CgRv3KotZXUAX9eYF_N&oh=d7ea8fa6fa65922c212ee39dfcb6cd24&oe=5F17A10F&ig_cache_key=YW5vbnltb3VzX3Byb2ZpbGVfcGlj.2",
+                "username": "riedayme"
+              },
+              "viewer_has_liked": false,
+              "edge_liked_by": {
+                "count": 0
+              },
+              "is_restricted_pending": false
+            }
+          }
+        ]
+      }
+    }
+  },
+  "status": "ok"
+}

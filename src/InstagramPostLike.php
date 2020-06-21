@@ -9,17 +9,13 @@ Class InstagramPostLike
 	public function SetCookie($data) 
 	{
 		$this->cookie = $data;
-	}
-
-	public function SetCSRF($data) 
-	{
 		$this->csrftoken = InstagramCookie::GetCSRFCookie($data);
 	}
 
-	public function Process($postdata)
+	public function Process($postid)
 	{
 
-		$url = "https://www.instagram.com/web/likes/{$postdata['id']}/like/";
+		$url = "https://www.instagram.com/web/likes/{$postid}/like/";
 
 		$headers = array();
 		$headers[] = "User-Agent: ". InstagramUserAgent::Get('Windows');
@@ -33,10 +29,13 @@ Class InstagramPostLike
 		if ($response['status'] == 'ok') {
 			return [
 			'status' => true,
-			'id' => $postdata['id']
+			'id' => $postid
 			];
 		}else{
-			return false;
+			return [
+			'status' => false,
+			'response' => $access['body']
+			];
 		}
 
 	}

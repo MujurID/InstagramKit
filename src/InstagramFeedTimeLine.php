@@ -46,6 +46,9 @@ Class InstagramFeedTimeLine
 
 		$access = InstagramHelper::curl($url, false , $headers, false, $useragent);
 
+		// echo $access['body'];
+		// exit;
+
 		$response = json_decode($access['body'],true);
 
 		if ($response['status'] == 'ok' AND $response['data']['user'] != null) {

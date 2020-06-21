@@ -1,6 +1,6 @@
 <?php namespace Riedayme\InstagramKit;
 
-Class InstagramSeenStory
+Class InstagramPostCommentLike
 {
 
 	public $cookie;	
@@ -12,28 +12,24 @@ Class InstagramSeenStory
 		$this->csrftoken = InstagramCookie::GetCSRFCookie($data);
 	}
 
-	public function Process($postdata)
+	public function Process($commentid)
 	{
 
-		$url = 'https://www.instagram.com/stories/reel/seen';
+		$url = "https://www.instagram.com/web/comments/like/{$commentid}/";
 
 		$headers = array();
 		$headers[] = "User-Agent: ". InstagramUserAgent::Get('Windows');
 		$headers[] = "X-Csrftoken: ".$this->csrftoken;
 		$headers[] = "Cookie: ". $this->cookie;
 
-		$time = time();
-		$sendpost = "reelMediaId={$postdata['id']}&reelMediaOwnerId={$postdata['userid']}&reelId={$postdata['userid']}&reelMediaTakenAt={$postdata['taken_at']}&viewSeenAt={$time}";
-
-		$access = InstagramHelper::curl($url, $sendpost , $headers);
+		$access = InstagramHelper::curl($url, 'empty' , $headers);
 
 		$response = json_decode($access['body'],true);
-
+		
 		if ($response['status'] == 'ok') {
 			return [
 			'status' => true,
-			'id' => $postdata['id'],
-			'username' => $postdata['username']
+			'id' => $commentid
 			];
 		}else{
 			return [
@@ -41,5 +37,7 @@ Class InstagramSeenStory
 			'response' => $access['body']
 			];
 		}
-	}		
+
+	}
+
 }

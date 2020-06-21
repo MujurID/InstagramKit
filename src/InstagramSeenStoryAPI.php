@@ -100,7 +100,7 @@ Class InstagramSeenStoryAPI
 			return "succes answer question {$storydata['story_detail']['id']} | message : {$this->option['story_questions']['message']}";
 		}
 
-		return false;
+		return $access['body'];
 	}
 
 	public function seen_story_polls($storydata)
@@ -125,7 +125,7 @@ Class InstagramSeenStoryAPI
 			return "succes polling {$storydata['story_detail']['id']} vote : {$this->option['story_polls']['vote']}";
 		}
 
-		return false;
+		return $access['body'];
 	}
 
 	public function seen_story_countdowns($storydata)
@@ -143,7 +143,7 @@ Class InstagramSeenStoryAPI
 			return "succes follow story countdown {$storydata['story_detail']['id']}";
 		}
 
-		return false;		
+		return $access['body'];		
 	}
 
 	public function seen_story_sliders($storydata)
@@ -168,7 +168,7 @@ Class InstagramSeenStoryAPI
 			return "succes send story sliders {$storydata['story_detail']['id']}";
 		}
 
-		return false;				
+		return $access['body'];				
 	}
 
 	public function seen_story_quizs($storydata)
@@ -192,6 +192,6 @@ Class InstagramSeenStoryAPI
 			return "succes send story quiz {$storydata['story_detail']['id']}";
 		}
 
-		return false;				
+		return $access['body'];				
 	}	
 }

@@ -4,13 +4,13 @@ require "../../vendor/autoload.php";
 use Riedayme\InstagramKit\InstagramFeedStoryAPI;
 use Riedayme\InstagramKit\InstagramSeenStoryAPI;
 
-$datacookie = 'csrftoken=qMtxFlqJKM7O3xDSNVzJE0w6kYaGEja1;rur=ASH;ds_user_id=31310607724;sessionid=31310607724%3AUJbi6M63uI2Kcb%3A20;';
+$datacookie = 'yourcookie';
 
-$useridtarget = '13320596140';
+$user_ids = ['13320596140'];
 
 $readstory = new InstagramFeedStoryAPI();
 $readstory->SetCookie($datacookie);
-$StoryUser = $readstory->GetStoryUser($useridtarget);
+$StoryUser = $readstory->GetStoryUser($user_ids);
 
 // echo json_encode($StoryUser);
 // exit;
