@@ -1,0 +1,68 @@
+{
+  "message": "",
+  "challenge": {
+    "challengeType": "SelectVerificationMethodForm",
+    "errors": [
+      "Select a valid choice. 0 is not one of the available choices."
+    ],
+    "experiments": {
+      
+    },
+    "extraData": {
+      "__typename": "GraphChallengePage",
+      "content": [
+        {
+          "__typename": "GraphChallengePageBanner",
+          "banner_text": "Suspicious Login Attempt"
+        },
+        {
+          "__typename": "GraphChallengePageHeader",
+          "description": null,
+          "title": "We Detected An Unusual Login Attempt"
+        },
+        {
+          "__typename": "GraphChallengePageText",
+          "alignment": "center",
+          "html": null,
+          "text": "To secure your account, we'll send you a security code to verify your identity."
+        },
+        {
+          "__typename": "GraphChallengePageForm",
+          "call_to_action": "Send Security Code",
+          "display": "inline",
+          "fields": [
+            {
+              "__typename": "GraphChallengePageFormChoiceField",
+              "input_name": "choice",
+              "input_type": "choice",
+              "values": [
+                {
+                  "label": "Email: p*******n@gmail.com",
+                  "selected": true,
+                  "value": 1
+                }
+              ]
+            }
+          ],
+          "href": null
+        }
+      ]
+    },
+    "fields": {
+      "choice": "1",
+      "fb_access_token": "None",
+      "big_blue_token": "true",
+      "google_oauth_token": "true",
+      "vetted_device": "None",
+      "email": "p*******n@gmail.com"
+    },
+    "navigation": {
+      "forward": "/challenge/31310607724/a7fC6DPp8V/",
+      "replay": "/challenge/replay/31310607724/a7fC6DPp8V/",
+      "dismiss": "instagram://checkpoint/dismiss"
+    },
+    "privacyPolicyUrl": "/about/legal/privacy/",
+    "type": "CHALLENGE"
+  },
+  "status": "fail"
+}

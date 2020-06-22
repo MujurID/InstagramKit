@@ -78,6 +78,40 @@ Class InputHelper
 		return (!$input) ? die('Pilihan masih Kosong'.PHP_EOL) : $input;
 	}
 
+	public function GetInputReConfig($data = false) {
+
+		if ($data) return $data;
+
+		echo "Apakah anda mengatur ulang konfigurasi ? : (y/n)".PHP_EOL;
+
+		$input = trim(fgets(STDIN));
+
+		if (!in_array(strtolower($input),['y','n'])) 
+		{
+			die("Pilihan tidak diketahui".PHP_EOL);
+		}
+
+		return (!$input) ? die('Pilihan masih Kosong'.PHP_EOL) : $input;
+	}
+
+	public function GetInputChoiceVerify($data = false) {
+
+		if ($data) return $data;
+
+		echo "Pilih cara vertifikasi :".PHP_EOL;
+		echo "[1] Kirim kode ke nomor handphone".PHP_EOL;
+		echo "[2] Kirim kode ke email".PHP_EOL;
+
+		$input = trim(fgets(STDIN));
+
+		if (!in_array(strtolower($input),['1','2'])) 
+		{
+			die("Pilihan tidak diketahui".PHP_EOL);
+		}
+
+		return (!$input) ? die('Pilihan masih Kosong'.PHP_EOL) : $input;
+	}
+
 	public function GetInputSecurityCode($data = false) {
 
 		if ($data) return $data;
@@ -166,7 +200,8 @@ Class InstagramStoryVoteKuy
 	public $status_story_sliders = true;
 	public $status_story_quizs = true;
 
-	public $count_process = 0;
+	public $count_process_seen = 0;
+	public $count_process_vote = 0;	
 
 	public $time_quesiton = false;
 
@@ -193,10 +228,31 @@ Class InstagramStoryVoteKuy
 				return self::Auth($relog_data);
 			}
 
+			$choice_reconfig = InputHelper::GetInputReConfig();
+
+			if ($choice_reconfig == 'y') {
+				$reconfig_data['userid'] = $results['userid'];
+				$reconfig_data['username'] = $results['username'];
+				$reconfig_data['photo'] = $results['photo'];
+				$reconfig_data['cookie'] = $results['cookie'];
+				$reconfig_data['csrftoken'] = $results['csrftoken'];
+				$reconfig_data['uuid'] = $results['uuid'];
+				$reconfig_data['rank_token'] = $results['rank_token'];
+				$reconfig_data['password'] = $results['password'];
+				$reconfig_data['question_message'] = InputHelper::GetInputStoryQuestionsMessage();
+				$reconfig_data['limit_per_day'] = InputHelper::GetInputLimitPerday();
+				$reconfig_data['only_vote'] = InputHelper::GetInputOnlyVote();			
+				$reconfig_data['targets'] = InputHelper::GetInputTargets();
+
+				self::SaveLogin($reconfig_data);
+
+				$results = $reconfig_data;
+			}
+
 			echo "[INFO] Check Live Cookie".PHP_EOL;
 
 			$check_cookie = InstagramChecker::CheckLiveCookie($results['cookie']);
-			if (!$check_cookie) die("[ERROR] cookie tidak bisa digunakan".PHP_EOL);
+			if (!$check_cookie) die("[ERROR] Cookie sudah mati, silahkan relog".PHP_EOL);
 
 		}else{	
 
@@ -205,20 +261,47 @@ Class InstagramStoryVoteKuy
 			$results = InstagramAuthAPI::Login($data['username'],$data['password']);			
 
 			if ($results['response'] == 'checkpoint') {
-				$required = InstagramAuthAPI::CheckPointSend($results);
+
+				echo "[INFO] Akun anda terkena checkpoint".PHP_EOL;
+
+				$choiceverify = InputHelper::GetInputChoiceVerify();
+				$choiceverify = ($choiceverify == 1 ? 0 : 1);
+				$sendCode = InstagramAuthAPI::CheckPointSend($results,$choiceverify);
+
+				if (!$sendCode['status']) die($sendCode['response']);
+
+				echo "[INFO] {$sendCode['response']}".PHP_EOL;
 
 				$required['url'] = $results['url'];
 				$required['cookie'] = $results['cookie'];
 				$required['csrftoken'] = $results['csrftoken'];
-				$required['guid'] = $results['guid'];				
-				$required['security_code'] = InputHelper::GetInputSecurityCode();
+				$required['guid'] = $results['guid'];
 
-				$results = InstagramAuthAPI::CheckPointSolve($required);
+				$is_connected       = false;
+				$is_connected_count = 1;
 
-				if (!is_array($results)) die($results);
+				do {
+
+					$required['security_code'] = InputHelper::GetInputSecurityCode();
+					$results = InstagramAuthAPI::CheckPointSolve($required);
+
+					if ( $is_connected_count == 3 ) {
+						die($results['response']);
+					}
+
+					if (!isset($results['status']))
+					{
+						$is_connected = true;
+					}else{
+						echo "[INFO] Kode Salah, coba lagi".PHP_EOL;
+					}
+
+					$is_connected_count += 1;
+				} while ( ! $is_connected );
+
 			}
 
-			echo "Menyimpan Data Login".PHP_EOL;
+			echo "[INFO] Menyimpan Data Login".PHP_EOL;
 
 			$results['password'] = $data['password'];
 			$results['question_message'] = $data['question_message'];
@@ -240,7 +323,7 @@ Class InstagramStoryVoteKuy
 
 	public function SaveLogin($data){
 
-		$filename = 'log/log-data-svk.json';
+		$filename = 'data/sc-svk.json';
 
 		if (file_exists($filename)) {
 			$read = file_get_contents($filename);
@@ -268,7 +351,7 @@ Class InstagramStoryVoteKuy
 	public function CheckPreviousData()
 	{
 
-		$filename = 'log/log-data-svk.json';
+		$filename = 'data/sc-svk.json';
 		if (file_exists($filename)) {
 			$read = file_get_contents($filename);
 			$read = json_decode($read,TRUE);
@@ -285,7 +368,7 @@ Class InstagramStoryVoteKuy
 	public function ReadPreviousData($data)
 	{
 
-		$filename = 'log/log-data-svk.json';
+		$filename = 'data/sc-svk.json';
 		if (file_exists($filename)) {
 			$read = file_get_contents($filename);
 			$read = json_decode($read,TRUE);
@@ -319,8 +402,8 @@ Class InstagramStoryVoteKuy
 				echo "[INFO] User {$username} | id => [$getuserid]".PHP_EOL;
 
 				$this->targets[] = [
-				'userid' => $getuserid,
-				'username' => $username
+					'userid' => $getuserid,
+					'username' => $username
 				];
 			}else{
 				echo "[INFO] Failed Read User {$username}".PHP_EOL;
@@ -333,6 +416,8 @@ Class InstagramStoryVoteKuy
 	public function GetShuffleTarget($index){
 
 		$targetlist = $this->targets;
+
+		//echo json_encode($targetlist).PHP_EOL;
 
 		/* reset index to 0 */
 		if ($index >= count($targetlist)) {
@@ -369,6 +454,9 @@ Class InstagramStoryVoteKuy
 		// $results = self::GetFollowersTargetByAPI($useridtarget,$next_id);
 
 		echo "[INFO] Berhasil mendapatkan ".count($results)." User".PHP_EOL;
+
+		// echo "[INFO] Delay 5".PHP_EOL;
+		sleep(5);
 
 		return $results;
 	}
@@ -423,8 +511,8 @@ Class InstagramStoryVoteKuy
 			if(!$user['latest_reel_media']) continue;
 
 			$results[] = [
-			'userid' => $user['pk'],
-			'username' => $user['username']
+				'userid' => $user['pk'],
+				'username' => $user['username']
 			];
 
 		}
@@ -454,7 +542,10 @@ Class InstagramStoryVoteKuy
 		$DataStory = $readstory->GetStoryUser($FollowersList);
 		$StoryUser = $readstory->ExtractStoryUser($DataStory);
 
-		if (!$StoryUser) return 'failed_get_story_user';
+		// echo json_encode($StoryUser);
+		// exit;
+
+		if (isset($StoryUser['status']) AND !$StoryUser['status']) return 'failed_get_story_user';
 		
 		$StoryList = array();
 		foreach ($StoryUser as $story) {
@@ -464,6 +555,9 @@ Class InstagramStoryVoteKuy
 			if ($story['story_detail']['type'] == 'countdowns' AND $this->status_story_countdowns == false) continue;
 			if ($story['story_detail']['type'] == 'sliders' AND $this->status_story_sliders == false) continue;
 			if ($story['story_detail']['type'] == 'quizs' AND $this->status_story_quizs == false) continue;												
+			/* sync story data with log file */
+			if (self::SyncStory($story['id'])) continue;
+
 			/* remove not story vote */
 			if ($this->only_vote == 'y') {
 				if ($story['story_detail']['type'] !== 'default') {
@@ -479,32 +573,10 @@ Class InstagramStoryVoteKuy
 		return $StoryList;	
 	}
 
-	public function SeenStory($story)
+	public function SeenStory($storydata)
 	{
-		$seenstory = new InstagramSeenStoryAPI();
-		$seenstory->SetCookie($datacookie);
 
-		/* mass seen story */
-		$BuildSeenStory = $seenstory->BuildSeenStory($story);
-		$results = $seenstory->Process($BuildSeenStory);
-
-		if ($results['status'] != false) {			
-
-			$this->count_process = $this->count_process + count($story);
-
-			echo "[".date('d-m-Y H:i:s')."] Success Seen All Story | Total Process : {$this->count_process} ".PHP_EOL;
-			echo "[INFO] Response : {$results['story_response']}".PHP_EOL;
-
-			return true;
-		}else{
-			echo "[".date('d-m-Y H:i:s')."] Failed Seen All Story".PHP_EOL;
-			echo "[INFO] Response : {$results['response']}".PHP_EOL;
-			return false;
-		}		
-	}
-
-	public function VoteStory($story)
-	{
+		if (!$storydata) return false;
 
 		$count_today = self::ReadLogDaily(strtolower($this->username));
 
@@ -517,6 +589,41 @@ Class InstagramStoryVoteKuy
 
 			sleep($remain_today);
 		}
+
+		$seenstory = new InstagramSeenStoryAPI();
+		$seenstory->SetCookie($this->cookie);
+
+		/* mass seen storydata */
+		$BuildSeenStory = $seenstory->BuildSeenStory($storydata);
+		$results = $seenstory->Process($BuildSeenStory);
+
+		if ($results['status'] != false) {			
+
+			$this->count_process_seen = $this->count_process_seen + count($storydata);
+
+			echo "[".date('d-m-Y H:i:s')."] Success Seen All Story | Total Process Seen : {$this->count_process_seen} ".PHP_EOL;
+			echo "[INFO] Response : {$results['response']}".PHP_EOL;
+
+			/* create log storydata default */
+			foreach ($storydata as $story) {
+				if ($story['story_detail']['type'] == 'default') {
+					self::SaveLog(strtolower($this->username),$story['id']);
+					self::SaveLogDaily(strtolower($this->username),$story['id']);
+				}
+			}
+
+			return true;
+		}else{
+			echo "[".date('d-m-Y H:i:s')."] Failed Seen All Story".PHP_EOL;
+			echo "[INFO] Response : {$results['response']}".PHP_EOL;
+			return false;
+		}		
+	}
+
+	public function VoteStory($story)
+	{
+
+		if ($story['story_detail']['type'] == 'default') return false;
 
 		/* sync story data with log file */
 		$sync = self::SyncStory($story['id']);
@@ -533,39 +640,43 @@ Class InstagramStoryVoteKuy
 			}
 		}		
 
-		echo "[INFO] Proses Seen Story {$story['username']}||{$story['id']}".PHP_EOL;
+		echo "[INFO] Proses Vote Story {$story['username']}||{$story['id']}".PHP_EOL;
 
 		$seenstory = new InstagramSeenStoryAPI();
 		$seenstory->SetCookie($this->cookie);
-		$seenstory->SetOption([
-			'story_questions' => [
-			'active' => $this->status_story_questions,
-			'message' => self::GetShuffleMessage($this->current_loop_message)
-			],
-			'story_polls' => [
-			'active' => $this->status_story_polls,
-			'vote' => '1'
-			],
-			'story_countdowns' => [
-			'active' => $this->status_story_countdowns
-			],
-			'story_sliders' => [
-			'active' => $this->status_story_sliders,
-			'vote' => '1'
-			],
-			'story_quizs' => [
-			'active' => $this->status_story_quizs
-			],
-			]);		
 
-		$results = $seenstory->SeenStoryByAPI($story);
+		if ($story['story_detail']['type'] == 'questions') 
+		{
+			$answer = self::GetShuffleMessage($this->current_loop_message);
+			$process_vote = $seenstory->AnswerQuestions($story,$answer);
+		}
+		elseif ($story['story_detail']['type'] == 'polls') 
+		{
+			$process_vote = $seenstory->VotePolls($story,'1');
+		}
+		elseif ($story['story_detail']['type'] == 'countdowns') 
+		{
+			$process_vote = $seenstory->FollowCountdowns($story);
+		}
+		elseif ($story['story_detail']['type'] == 'sliders') 
+		{
+			$min = 10; 
+			$max = 90;
+			$point = ( mt_rand( $min, $max ) / 100 );
+			$point = ($point > 1 ? 1 : $point);
+			$process_vote = $seenstory->VoteSliders($story,$point);
+		}
+		elseif ($story['story_detail']['type'] == 'quizs') 
+		{
+			$process_vote = $seenstory->AnswerQuizs($story);
+		}
 
-		if ($results['status'] != false) {			
+		if ($process_vote['status'] != false) {			
 
-			$this->count_process = $this->count_process + 1; 
+			$this->count_process_vote = $this->count_process_vote + 1; 
 
-			echo "[".date('d-m-Y H:i:s')."] Success Seen Story {$story['id']} | Type : {$story['story_detail']['type']} | Total Process : {$this->count_process} ".PHP_EOL;
-			echo "[INFO] Response : {$results['story_response']}".PHP_EOL;
+			echo "[".date('d-m-Y H:i:s')."] Success Vote Story {$story['id']} | Type : {$story['story_detail']['type']} | Total Process Vote : {$this->count_process_vote} ".PHP_EOL;
+			echo "[INFO] Response : {$process_vote['response']}".PHP_EOL;
 
 			self::SaveLog(strtolower($this->username),$story['id']);
 			self::SaveLogDaily(strtolower($this->username),$story['id']);
@@ -578,8 +689,8 @@ Class InstagramStoryVoteKuy
 
 			return 'other';
 		}else{
-			echo "[".date('d-m-Y H:i:s')."] Failed Seen Story {$story['id']} | Type : {$story['story_detail']['type']}".PHP_EOL;
-			echo "[INFO] Response : {$results['response']}".PHP_EOL;
+			echo "[".date('d-m-Y H:i:s')."] Failed Vote Story {$story['id']} | Type : {$story['story_detail']['type']}".PHP_EOL;
+			echo "[INFO] Response : {$process_vote['response']}".PHP_EOL;
 			return false;
 		}
 	}
@@ -703,7 +814,16 @@ Class Worker
 			}
 
 			/* send mass viewing */
-			$process_mass_viewing = $Working->SeenStory($StoryList)
+			$process_mass_viewing = $Working->SeenStory($StoryList);
+
+			if ($process_mass_viewing) 
+			{
+				echo "[INFO] Delay {$delay}".PHP_EOL;
+				sleep($delay);
+				$delay = $delay+5;
+
+				$seenstory++;
+			}	
 
 			foreach ($StoryList as $key => $story) {
 
@@ -725,7 +845,7 @@ Class Worker
 					$seenstory++;
 				}
 
-			}
+			}		
 
 		}		
 

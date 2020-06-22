@@ -1,0 +1,62 @@
+{
+  "challengeType": "VerifyEmailCodeForm",
+  "errors": [
+    
+  ],
+  "experiments": {
+    
+  },
+  "extraData": {
+    "__typename": "GraphChallengePage",
+    "content": [
+      {
+        "__typename": "GraphChallengePageHeader",
+        "description": null,
+        "title": "Enter Your Security Code"
+      },
+      {
+        "__typename": "GraphChallengePageText",
+        "alignment": "center",
+        "html": null,
+        "text": "Enter the 6-digit code we sent to the email address p*******n@gmail.com."
+      },
+      {
+        "__typename": "GraphChallengePageForm",
+        "call_to_action": "Submit",
+        "display": "inline",
+        "fields": [
+          {
+            "__typename": "GraphChallengePageFormSecurityCodeField",
+            "input_name": "security_code",
+            "input_type": "security_code",
+            "value": {
+              "label": "Security code",
+              "placeholder": null,
+              "value": null
+            }
+          }
+        ],
+        "href": null
+      },
+      {
+        "__typename": "GraphChallengePageSecondaryText",
+        "html": "Didn't receive your code? \u003ca href=\"javascript:_replay()\"\u003eGet a new one\u003c/a\u003e.",
+        "text": null
+      }
+    ]
+  },
+  "fields": {
+    "security_code": "None",
+    "resend_delay": 60,
+    "contact_point": "p*******n@gmail.com",
+    "form_type": "email"
+  },
+  "navigation": {
+    "forward": "/challenge/31310607724/RTJIclw9MW/",
+    "replay": "/challenge/replay/31310607724/RTJIclw9MW/",
+    "back": "/challenge/reset/31310607724/RTJIclw9MW/"
+  },
+  "privacyPolicyUrl": "/about/legal/privacy/",
+  "type": "CHALLENGE",
+  "status": "ok"
+}

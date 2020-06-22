@@ -32,7 +32,7 @@ Class InstagramSeenStoryAPI
 
             // Determine the source ID for this item. This is where the item was
             // seen from, such as a UserID or a Location-StoryTray ID.
-        	$itemSourceId = ($sourceId === null ? $item['userid'] : $sourceId);
+        	$itemSourceId = $item['userid'];
 
             // Key Format: "mediaPk_userPk_sourceId".
             // NOTE: In case of seeing stories on a user's profile, their

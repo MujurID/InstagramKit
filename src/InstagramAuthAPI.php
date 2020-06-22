@@ -87,7 +87,17 @@ Class InstagramAuthAPI
 
 		$response = json_decode($access['body'],true);
 
-		return $response;
+		if ($response['status'] == 'ok') {
+			return [
+				'status' => true,
+				'response' => $response['extraData']['content'][1]['text']
+			];
+		}else{
+			return [
+				'status' => false,
+				'response' => $response['challenge']['errors'][0]
+			];
+		}
 	}
 
 	public function CheckPointSolve($postdata)
@@ -131,9 +141,12 @@ Class InstagramAuthAPI
 				'uuid' =>$postdata['guid'],
 				'rank_token' => $rank_token
 			];
+		}else{
+			return [
+				'status' => false,
+				'response' => $response['challenge']['errors'][0]
+			];
 		}
-
-		return $access['body'];
 	}	
 
 }

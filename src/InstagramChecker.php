@@ -45,7 +45,7 @@ Class InstagramChecker
 
 		$result = json_decode($access['body']);
 
-		if($result->graphql->user->restricted_by_viewer === false){
+		if(is_object($result) AND $result->graphql->user->restricted_by_viewer === false){
 			return [
 			'userid' => $userid,
 			'username' => $userinfo['username'],
