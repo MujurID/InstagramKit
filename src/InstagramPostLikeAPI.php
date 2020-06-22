@@ -10,16 +10,13 @@ Class InstagramPostLikeAPI
 		$this->cookie = $data;
 	}
 
-	public function Process($postdata)
+	public function Process($postid)
 	{
 
-		$url = "https://i.instagram.com/api/v1/media/{$postdata['id']}/like/";
+		$url = "https://i.instagram.com/api/v1/media/{$postid}/like/";
 
 		$data = json_encode([
-			'_uuid'      => $this->uuid,
-			'_uid'       => $this->uid,
-			'_csrftoken' => $this->token,
-			'media_id'   => $postdata['id']
+			'media_id'   => $postid
 			]);
 
 		$buildpostdata = InstagramHelperAPI::generateSignature($data);
@@ -31,10 +28,13 @@ Class InstagramPostLikeAPI
 		if ($response['status'] == 'ok') {
 			return [
 			'status' => true,
-			'id' => $postdata['id']
+			'response' => 'success'
 			];
 		}else{
-			return false;
+			return [
+			'status' => false,
+			'response' => $access['body']
+			];
 		}
 
 	}

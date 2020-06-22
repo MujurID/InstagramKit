@@ -1,40 +1,58 @@
 <?php  
-date_default_timezone_set('Asia/Jakarta');
-
-$begin_ms = strtotime(date("Y-m-d H:i:s") ."-2 minutes");
-
-$delay = 20;
-$now_ms = strtotime( date( 'Y-m-d H:i:s' ) );
-$counter3 = $delay - ( $now_ms - $begin_ms );
-
-echo 0 % 1000;
-
-exit;
-do {
-	echo $counter3;
-	sleep( 1 );
-	$counter3 -= 1;
-} while ( $counter3 != 0 );
-
-exit;
-$speed = 400000;
-echo round( 60 * 60 * 24 * 10 / $speed );
-exit;
-
-function progress_bar($done, $total, $info="", $width=50) {
-	$perc = round(($done * 100) / $total);
-	$bar = round(($width * $perc) / 100);
-	return sprintf("%s%%[%s>%s]%s\r", $perc, str_repeat("=", $bar), str_repeat(" ", $width-$bar), $info);
+function get_limit($delay){
+	$cron = 5;
+	$dayinminutes = 1440;
+	$total_cron_in_one_day = $dayinminutes/$cron;
+	$process = $delay;
+	$per_cron_process = $process/$total_cron_in_one_day;
+	$limit = ceil($per_cron_process);
+	return $limit;
 }
 
-$tasks = 200;
-$done = 0;
-for($done = 0; $done <= $tasks; $done++){
-	usleep((rand() % 127)*100);
+function get_sleep_time_by_limit($limit){
 
-	echo progress_bar($done, $tasks);
+	$dayinseconds = 86400;
+
+	$sleep = $dayinseconds/$limit;
+
+	return ceil($sleep);
 }
 
-echo "ayee";
+$limit_process = get_sleep_time_by_limit(80);
+// echo $limit_process;
+// exit;
+$time_quesiton = false;
+$datastory = ['question','pool','pool','question','pool'];
 
-?>
+while (true) {
+	foreach ($datastory as $story) {
+		if ($story == 'question') {
+
+			if ($time_quesiton AND strtotime(date('Y-m-d H:i:s')) <= strtotime($time_quesiton)) {
+				echo "skip question next process time {$time_quesiton}".PHP_EOL;
+				continue;
+			}
+			$time_quesiton = date('Y-m-d H:i:s',strtotime("+{$limit_process} seconds"));
+		}
+
+		echo $story.PHP_EOL;
+		// echo date('Y-m-d H:i:s').PHP_EOL;
+		sleep(1);
+	}
+}
+
+/**
+ * jika waktu saat ini sudah melewati next time process  
+ * maka bisa proses lagi > set next time again
+ * jika belum maka diskip lanjut ke story selanjutnya 
+ 
+	
+ex :
+loop
+	vote story 1 > answer question > if answer question set next time process question time
+	vote story 2 > answer pool > process
+	vote story 3 > answer question > check if this time >= next time process ? process : skip
+	vote story 3 > answer slider > process
+	...
+	... 
+ */

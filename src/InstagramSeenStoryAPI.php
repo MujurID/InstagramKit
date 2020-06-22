@@ -3,195 +3,259 @@
 Class InstagramSeenStoryAPI
 {
 
-	public $cookie;	
-
-	public $option = array();
+	public $cookie; 
 
 	public function SetCookie($data) 
 	{
 		$this->cookie = $data;
 	}
 
-	public function SetOption($data) 
-	{
-		$this->option = $data;
-	}	
+	public function BuildSeenStory($items){
 
-	public function SeenStoryByAPI($storydata)
-	{
+        // Build the list of seen media, with human randomization of seen-time.
+		$reels = [];
+        $maxSeenAt = time(); // Get current global UTC timestamp.
+        $seenAt = $maxSeenAt - (3 * count($items)); // Start seenAt in the past.
+        foreach ($items as $item) {
 
+            // Raise "seenAt" if it's somehow older than the item's "takenAt".
+            // NOTE: Can only happen if you see a story instantly when posted.
+        	$itemTakenAt = $item['taken_at'];
+        	if ($seenAt < $itemTakenAt) {
+        		$seenAt = $itemTakenAt + 2;
+        	}
 
-		$is_vod = false;
+            // Do not let "seenAt" exceed the current global UTC time.
+        	if ($seenAt > $maxSeenAt) {
+        		$seenAt = $maxSeenAt;
+        	}
 
-		$params = '?' . ($is_vod==false ? 'reel=1' : 'reel=0') . '&' . ($is_vod==true ? 'live_vod=1' : 'live_vod=0');
+            // Determine the source ID for this item. This is where the item was
+            // seen from, such as a UserID or a Location-StoryTray ID.
+        	$itemSourceId = ($sourceId === null ? $item['userid'] : $sourceId);
 
-		$url = 'https://i.instagram.com/api/v1/media/seen/'.$params;
+            // Key Format: "mediaPk_userPk_sourceId".
+            // NOTE: In case of seeing stories on a user's profile, their
+            // userPk is used as the sourceId, as "mediaPk_userPk_userPk".
+        	$reelId = $item['id'].'_'.$itemSourceId;
 
-		$reelId_o = $storydata['id'];
-		$reelId = $storydata['id']."_".$storydata['userid'];
-		$reels_real[$reelId] = $storydata['taken_at'].'_'.time();
+            // Value Format: ["mediaTakenAt_seenAt"] (array with single string).
+        	$reels[$reelId] = $itemTakenAt.'_'.$seenAt;
 
-		$data = json_encode([
-			'reels'      => ($is_vod == false ? $reels_real : []),
-			'live_vods'  => ($is_vod == true ? $reels_real : [])
-			]);	
+            // Randomly add 1-3 seconds to next seenAt timestamp, to act human.
+        	$seenAt += rand(1, 3);
+        }
 
-		$postdata = InstagramHelperAPI::generateSignature($data);
+        return $reels;
+    }       
 
-		$access = InstagramHelperAPI::curl($url, $postdata , false , $this->cookie , InstagramUserAgent::Get('Android'));
+    public function Process($storydata)
+    {
 
-		$response = json_decode($access['body'],true);
+    	$is_vod = false;
 
-		if ($response['status'] == 'ok') {
-			
-			$story_response = 'success';
+    	$params = '?' . ($is_vod==false ? 'reel=1' : 'reel=0') . '&' . ($is_vod==true ? 'live_vod=1' : 'live_vod=0');
 
-			if ($storydata['story_detail']['type'] == 'questions') 
-			{
-				$story_response = self::seen_story_questions($storydata);
-			}
-			elseif ($storydata['story_detail']['type'] == 'polls') 
-			{
-				$story_response = self::seen_story_polls($storydata);
-			}
-			elseif ($storydata['story_detail']['type'] == 'countdowns') 
-			{
-				$story_response = self::seen_story_countdowns($storydata);
-			}
-			elseif ($storydata['story_detail']['type'] == 'sliders') 
-			{
-				$story_response = self::seen_story_sliders($storydata);
-			}
-			elseif ($storydata['story_detail']['type'] == 'quizs') 
-			{
-				$story_response = self::seen_story_quizs($storydata);
-			}
+    	$url = 'https://i.instagram.com/api/v1/media/seen/'.$params;
 
-			return [
-			'status' => true,
-			'id' => $storydata['id'],
-			'username' => $storydata['username'],
-			'story_response' => $story_response
-			];
-		}
+    	$data = json_encode([
+    		'container_module' => 'feed_timeline',
+    		'reels'      => ($is_vod == false ? $storydata : []),
+    		'live_vods'  => ($is_vod == true ? $storydata : [])
+    		]); 
 
-		return false;
-	}
+    	$postdata = InstagramHelperAPI::generateSignature($data);
 
-	public function seen_story_questions($storydata)
-	{
+    	$access = InstagramHelperAPI::curl($url, $postdata , false , $this->cookie , InstagramUserAgent::Get('Android'));
 
-		if (!$this->option['story_questions']['active']) return false;
+    	$response = json_decode($access['body'],true);
 
-		$url = 'https://i.instagram.com/api/v1/media/'.$storydata['id'].'/'.$storydata['story_detail']['id'].'/story_question_response/';
+    	if ($response['status'] == 'ok') {
+    		return [
+    		'status' => true,
+    		'response' => 'success seen '.count($storydata).' story'
+    		];
+    	}
 
-		$data = json_encode([
-			'response' => $this->option['story_questions']['message'],
-			'type' => 'text'
-			]);	
+    	return [
+    	'status' => false,
+    	'response' => $access['body']
+    	];
+    }
 
-		$postdata = InstagramHelperAPI::generateSignature($data);
+    public function AnswerQuestions($storydata,$answer)
+    {
 
-		$access = InstagramHelperAPI::curl($url, $postdata , false , $this->cookie , InstagramUserAgent::Get('Android'));
+    	$url = 'https://i.instagram.com/api/v1/media/'.$storydata['id'].'/'.$storydata['story_detail']['id'].'/story_question_response/';
 
-		$response = json_decode($access['body'],true);
+    	$data = json_encode([
+    		'response' => $answer,
+    		'type' => 'text'
+    		]); 
 
-		if ($response['status'] == 'ok') {
-			return "succes answer question {$storydata['story_detail']['id']} | message : {$this->option['story_questions']['message']}";
-		}
+    	$postdata = InstagramHelperAPI::generateSignature($data);
 
-		return $access['body'];
-	}
+    	$access = InstagramHelperAPI::curl($url, $postdata , false , $this->cookie , InstagramUserAgent::Get('Android'));
 
-	public function seen_story_polls($storydata)
-	{
+        // echo $access['body'].PHP_EOL;
 
-		if (!$this->option['story_polls']['active']) return false;
+    	$response = json_decode($access['body'],true);
 
-		$url = 'https://i.instagram.com/api/v1/media/'.$storydata['id'].'/'.$storydata['story_detail']['id'].'/story_poll_vote/';
+    	if ($response['status'] == 'ok') {
+    		
+    		$message = "succes answer question {$storydata['story_detail']['id']} | message : {$answer}";
 
-		$data = json_encode([
-			'radio_type' => 'none',
-			'vote' => $this->option['story_polls']['vote'],
-			]);	
+    		return [
+    		'status' => true,
+    		'response' => $message
+    		];
+    	}
 
-		$postdata = InstagramHelperAPI::generateSignature($data);
+    	return [
+    	'status' => false,
+    	'response' => $access['body']
+    	];
+    }
 
-		$access = InstagramHelperAPI::curl($url, $postdata , false , $this->cookie , InstagramUserAgent::Get('Android'));
+    public function VotePolls($storydata,$vote)
+    {
 
-		$response = json_decode($access['body'],true);
+    	if ($storydata['story_detail']['viewer_vote']) {
+    		return [
+    		'status' => false,
+    		'response' => 'story_hasben_voted'
+    		];
+    	}
 
-		if ($response['status'] == 'ok') {
-			return "succes polling {$storydata['story_detail']['id']} vote : {$this->option['story_polls']['vote']}";
-		}
+    	$url = 'https://i.instagram.com/api/v1/media/'.$storydata['id'].'/'.$storydata['story_detail']['id'].'/story_poll_vote/';
 
-		return $access['body'];
-	}
+    	$data = json_encode([
+    		'radio_type' => 'none',
+    		'vote' => "{$vote}",
+    		]); 
 
-	public function seen_story_countdowns($storydata)
-	{
+    	$postdata = InstagramHelperAPI::generateSignature($data);
 
-		if (!$this->option['story_countdowns']['active']) return false;
+    	$access = InstagramHelperAPI::curl($url, $postdata , false , $this->cookie , InstagramUserAgent::Get('Android'));
 
-		$url = 'https://i.instagram.com/api/v1/media/'.$storydata['story_detail']['id'].'/follow_story_countdown/';
+    	$response = json_decode($access['body'],true);
 
-		$access = InstagramHelperAPI::curl($url, false , false , $this->cookie , InstagramUserAgent::Get('Android'));
+    	if ($response['status'] == 'ok') {
+    		
+    		$message = "succes polling {$storydata['story_detail']['id']} vote : {$vote}";
 
-		$response = json_decode($access['body'],true);
+    		return [
+    		'status' => true,
+    		'response' => $message
+    		];
+    	}
 
-		if ($response['status'] == 'ok') {
-			return "succes follow story countdown {$storydata['story_detail']['id']}";
-		}
+    	return [
+    	'status' => false,
+    	'response' => $access['body']
+    	];
+    }
 
-		return $access['body'];		
-	}
+    public function FollowCountdowns($storydata)
+    {
 
-	public function seen_story_sliders($storydata)
-	{
+    	$url = 'https://i.instagram.com/api/v1/media/'.$storydata['story_detail']['id'].'/follow_story_countdown/';
 
-		if (!$this->option['story_sliders']['active']) return false;
+    	$access = InstagramHelperAPI::curl($url, 'empty' , false , $this->cookie , InstagramUserAgent::Get('Android'));
 
-		$url = 'https://i.instagram.com/api/v1/media/'.$storydata['id'].'/'.$storydata['story_detail']['id'].'/story_slider_vote/';
+    	$response = json_decode($access['body'],true);
 
-		$data = json_encode([
-			'radio_type' => 'wifi-none',
-			'vote' => $this->option['story_sliders']['vote'],
-			]);	
+    	if ($response['status'] == 'ok') {
+    		
+    		$message = "succes follow story countdown {$storydata['story_detail']['id']}";
 
-		$postdata = InstagramHelperAPI::generateSignature($data);
+    		return [
+    		'status' => true,
+    		'response' => $message
+    		];
+    	}
 
-		$access = InstagramHelperAPI::curl($url, $postdata , false , $this->cookie , InstagramUserAgent::Get('Android'));
+    	return [
+    	'status' => false,
+    	'response' => $access['body']
+    	];     
+    }
 
-		$response = json_decode($access['body'],true);
+    public function VoteSliders($storydata,$vote)
+    {
 
-		if ($response['status'] == 'ok') {
-			return "succes send story sliders {$storydata['story_detail']['id']}";
-		}
+    	if ($storydata['story_detail']['viewer_vote']) {
+    		return [
+    		'status' => false,
+    		'response' => 'story_hasben_voted'
+    		];
+    	}
 
-		return $access['body'];				
-	}
+    	$url = 'https://i.instagram.com/api/v1/media/'.$storydata['id'].'/'.$storydata['story_detail']['id'].'/story_slider_vote/';
 
-	public function seen_story_quizs($storydata)
-	{
+    	$data = json_encode([
+    		'radio_type' => 'wifi-none',
+    		'vote' => "{$vote}",
+    		]); 
 
-		if (!$this->option['story_quizs']['active']) return false;
+    	$postdata = InstagramHelperAPI::generateSignature($data);
 
-		$url = 'https://i.instagram.com/api/v1/media/'.$storydata['id'].'/'.$storydata['story_detail']['id'].'/story_quiz_answer/';
+    	$access = InstagramHelperAPI::curl($url, $postdata , false , $this->cookie , InstagramUserAgent::Get('Android'));
 
-		$data = json_encode([
-			'answer' => ''.rand(0,$storydata['story_detail']['count_question']).'',
-			]);	
+    	$response = json_decode($access['body'],true);
 
-		$postdata = InstagramHelperAPI::generateSignature($data);
+    	if ($response['status'] == 'ok') {
+    		
+    		$message = "succes vote sliders {$storydata['story_detail']['id']} vote : {$vote}";
 
-		$access = InstagramHelperAPI::curl($url, $postdata , false , $this->cookie , InstagramUserAgent::Get('Android'));
-		
-		$response = json_decode($access['body'],true);
+    		return [
+    		'status' => true,
+    		'response' => $message
+    		];
+    	}
 
-		if ($response['status'] == 'ok') {
-			return "succes send story quiz {$storydata['story_detail']['id']}";
-		}
+    	return [
+    	'status' => false,
+    	'response' => $access['body']
+    	];             
+    }
 
-		return $access['body'];				
-	}	
+    public function AnswerQuizs($storydata)
+    {
+
+    	if ($storydata['story_detail']['viewer_answer']) {
+    		return [
+    		'status' => false,
+    		'response' => 'story_hasben_answer'
+    		];
+    	}
+
+    	$url = 'https://i.instagram.com/api/v1/media/'.$storydata['id'].'/'.$storydata['story_detail']['id'].'/story_quiz_answer/';
+
+    	$answer = rand(0,$storydata['story_detail']['count_question']-1);
+    	$data = json_encode([
+    		'answer' => "{$answer}",
+    		]); 
+
+    	$postdata = InstagramHelperAPI::generateSignature($data);
+
+    	$access = InstagramHelperAPI::curl($url, $postdata , false , $this->cookie , InstagramUserAgent::Get('Android'));
+
+    	$response = json_decode($access['body'],true);
+
+    	if ($response['status'] == 'ok') {
+    		
+    		$message = "succes vote story quiz {$storydata['story_detail']['id']}";
+
+    		return [
+    		'status' => true,
+    		'response' => $message
+    		];
+    	}
+
+    	return [
+    	'status' => false,
+    	'response' => $access['body']
+    	];             
+    }   
 }

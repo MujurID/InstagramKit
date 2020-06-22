@@ -68,3 +68,9 @@ curl 'https://www.instagram.com/web/comments/2332344911195799233/add/' -H 'autho
 https://www.instagram.com/graphql/query/?query_hash=1ee91c32fc020d44158a3192eda98247&variables={"comment_id":"17893046791541968","first":35,"after":""}
 
 https://www.instagram.com/graphql/query/?query_hash=1ee91c32fc020d44158a3192eda98247&variables={"comment_id":"17893046791541968","first":6,"after":"QVFCUy1RcmtzMjFZUWVENEItSHo2a3F1ZjJ0ejNJSzdXb3g5UlJvbTJMeEFjbjhPd2lOQ2g1WTNIR1BUdGpMVHVpQnpEY3dpaGN4WjI5dVZXTlBVeEVRSA=="}
+
+[22-06-2020 07:48:06] Success Seen Story 2336776644202379582 | Type : quizs
+[INFO] Response : {"message": "Invalid answer", "status": "fail"}
+
+
+Following people ignored. (If your target have a your following user, algorithm ignore this. )

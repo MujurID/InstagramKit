@@ -51,7 +51,7 @@ Class InstagramHelper
 		}
 	}	
 
-	public static function FindStringOnArray ($arr, $string) {
+	public static function FindStringOnArray($arr, $string) {
 		return array_filter($arr, function($value) use ($string) {
 			return strpos($value, $string) !== false;
 		});
@@ -76,6 +76,15 @@ Class InstagramHelper
 		$token = $output['access_token'];
 
 		return $token;
+	}
+
+	public static function GetSleepTimeByLimit($limit){
+
+		$dayinseconds = 86400;
+
+		$sleep = $dayinseconds/$limit;
+
+		return ceil($sleep);
 	}
 
 }

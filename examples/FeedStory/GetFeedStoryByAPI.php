@@ -9,8 +9,8 @@ $user_ids = ['13320596140','3555900579'];
 
 $read = new InstagramFeedStoryAPI();
 $read->SetCookie($datacookie);
-// $results = $read->GetStoryList();
-$results = $read->GetStoryUser($user_ids);
+$read->GetStoryUser($user_ids);
+$results = $read->ExtractStoryUser();
 
 // echo json_encode($results);
 // exit;
@@ -19,7 +19,7 @@ echo "<pre>";
 var_dump($results);
 echo "</pre>";
 
-/*
+/* ExtractStoryUser
 [
   {
     "id": 2336332851137925320,

@@ -33,19 +33,40 @@ Class InstagramFeedStoryAPI
 		
 		$response = json_decode($access['body'],true);
 
-		if ($response['status'] == 'ok' AND $response['reels'] != null) {
-			return self::ExtractStoryUser($response);		
+		if ($response['status'] == 'ok' AND $response['reels'] != null) {		
+
+			return [
+			'status' => true,
+			'data' => $response
+			];
+
 		}else{
-			// Tidak dapat mengambil feed story user
-			return false;
+
+			if ($response['status'] == 'ok') {
+
+				// story not found
+				return [
+				'status' => false,
+				'response' => 'no_story'
+				];
+			}
+
+			// failed get story
+			return [
+			'status' => false,
+			'response' => $access['body']
+			];
 		}
 	}	
 
 	public function ExtractStoryUser($response)
 	{
-		$extract = array();
 
-		$reels = $response['reels'];
+		if (!$response['status']) return $response;
+
+		$reels = $response['data']['reels'];
+
+		$extract = array();
 		foreach ($reels as $key => $id) {
 
 			$userid = $reels[$key]['user']['pk'];		

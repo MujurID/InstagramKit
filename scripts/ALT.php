@@ -12,6 +12,10 @@ use Riedayme\InstagramKit\InstagramChecker;
 use Riedayme\InstagramKit\InstagramFeedTimeLine;
 use Riedayme\InstagramKit\InstagramPostLike;
 
+use Riedayme\InstagramKit\InstagramPostCommentsRead;
+use Riedayme\InstagramKit\InstagramPostCommentsReplyRead;
+use Riedayme\InstagramKit\InstagramPostCommentLike;
+
 Class InputHelper
 {
 	public function GetInputUsername($data = false) {
@@ -54,6 +58,23 @@ Class InputHelper
 
 		return trim(fgets(STDIN));
 	}
+
+	public function GetInputLikeComments($data = false) 
+	{
+
+		if ($data) return $data;
+
+		echo "Like Comment Juga ? (y/n): ".PHP_EOL;
+
+		$input = trim(fgets(STDIN));
+
+		if (!in_array(strtolower($input),['y','n'])) 
+		{
+			die("Pilihan tidak diketahui".PHP_EOL);
+		}
+
+		return (!$input) ? die('Pilihan masih Kosong'.PHP_EOL) : $input;
+	}	
 }
 
 Class InstagramAutoLikeTIme
@@ -158,8 +179,6 @@ Class InstagramAutoLikeTIme
 	public function GetFeed()
 	{
 
-		echo "[INFO] Membaca Feed Timeline".PHP_EOL;
-
 		$FeedTimeLine = new InstagramFeedTimeLine();
 		$FeedTimeLine->SetCookie($this->cookie);
 
@@ -170,43 +189,87 @@ Class InstagramAutoLikeTIme
 
 		if (!$results) return 'fail_get_feed';
 
-		echo "[INFO] Berhasil Mendapatkan Feed".PHP_EOL;
-
-		return self::SyncPost($results);
+		return $results;
 	}
 
 	public function LikePost($post)
 	{
-		echo "[INFO] Proses Like Post {$post['username']}||{$post['id']}".PHP_EOL;
 
 		$likepost = new InstagramPostLike();
 		$likepost->SetCookie($this->cookie);
 		$process = $likepost->Process($post['id']);
 
-		if ($process['status'] != false) {
-			echo "[SUCCESS] Sukses Like Post {$post['url']}".PHP_EOL;
-		}else{
-			echo "[FAILED] Like Post {$post['url']}".PHP_EOL;
-			echo "[INFO] Response : {$process['response']}".PHP_EOL;			
-		}
+		return $process;
 	}
 
-	public function SyncPost($postdata)
+	public function GetComment($shortcode)
 	{
 
-		echo "Sync Feed Post".PHP_EOL;
+		$readcomments = new InstagramPostCommentsRead();
+		$readcomments->SetCookie($this->cookie);
+		$results = $readcomments->Process($shortcode);
 
-		$results = array();
-		foreach ($postdata as $post) {
-			if ($post['haslike']) {
-				echo "[SKIP] Post {$post['id']} sudah dilike. ".PHP_EOL;
-				continue;
+		if (!$results) return false;
+
+		$readcomments_reply = new InstagramPostCommentsReplyRead();
+		$readcomments_reply->SetCookie($this->cookie);
+
+		$extract = array();
+		$edges = $results['data']['shortcode_media']['edge_media_to_parent_comment']['edges'];
+		foreach ($edges as $node) {
+
+			$comment = $node['node'];
+			$count_reply = $comment['edge_threaded_comments']['count'];
+			$user = $comment['owner'];
+			$haslike = $comment['viewer_has_liked'];
+
+			/* skip if comment hasben liked */
+			if ($haslike == true) continue;
+
+			$extract[] = [
+			'id' => $comment['id'],
+			'text' => $comment['text'],
+			'userid' => $user['id'],
+			'username' => $user['username'],
+			'haslike' => $haslike,
+			'count_reply' => $count_reply
+			];
+
+			/* read reply comment */
+			if ($count_reply > 0) {
+				$results_reply = $readcomments_reply->Process($comment['id']);
+
+				$edges = $results_reply['data']['comment']['edge_threaded_comments']['edges'];
+				foreach ($edges as $node) {
+
+					$comment = $node['node'];
+					$user = $comment['owner'];
+					$haslike = $comment['viewer_has_liked'];
+
+					$extract[] = [
+					'id' => $comment['id'],
+					'text' => $comment['text'],
+					'userid' => $user['id'],
+					'username' => $user['username'],
+					'haslike' => $haslike
+					];
+				}
 			}
 
-			$results[] = $post;
 		}
+		
+		return $extract;
+	}
 
-		return $results;
+	public function LikeComment($comment)
+	{
+
+		$likecomment = new InstagramPostCommentLike();
+		$likecomment->SetCookie($this->cookie);
+
+		$process = $likecomment->Process($comment['id']);
+
+		return $process;
 	}
 }
 
@@ -232,9 +295,10 @@ Class Worker
 		$Working = new InstagramAutoLikeTIme();
 		$Working->Auth($account);
 
+		$like_comment = InputHelper::GetInputLikeComments();
+
 		$nofeed = 0;
 		$likepost = 0;
-		$nogetfeed = 0;
 		while (true) {
 
 			/* when nofeed 5 reset sleep value to default */
@@ -243,16 +307,12 @@ Class Worker
 				$nofeed = 0;
 			}
 
-			/* when nogetfeed 3 die because the cookie death */
-			if ($nogetfeed >= 3) die("cookie sudah mati");
+			echo "[INFO] Membaca Feed Timeline".PHP_EOL;
 
 			$FeedList = $Working->GetFeed();
 
-			if (empty($FeedList)) {
+			if (!is_array($FeedList)) {
 
-				if ($FeedList == 'fail_get_feed') {
-					$nogetfeed++;
-				}
 				echo "[INFO] Tidak ditemukan Post, Coba lagi setelah {$delayfeed} detik".PHP_EOL;
 				sleep($delayfeed);
 
@@ -260,9 +320,14 @@ Class Worker
 				$nofeed++;
 
 				continue;
+			}else{				
+				$nogetfeed = 0; /* reset value */
+
+				echo "[INFO] Berhasil Mendapatkan Feed".PHP_EOL;
 			}
 
-			foreach ($FeedList as $key => $story) {
+			$temp_post_process = 0;
+			foreach ($FeedList as $key => $post) {
 
 				/* when likepost 5 reset sleep value to default */
 				if ($likepost >= 5) {
@@ -270,13 +335,83 @@ Class Worker
 					$likepost = 0;
 				}	
 
-				$Working->LikePost($story);
+				if ($post['haslike']) {
+					echo "[SKIP] Post {$post['id']} sudah dilike. ".PHP_EOL;
+				}else{					
+					echo "[INFO] Proses Like Post {$post['username']}||{$post['id']}".PHP_EOL;
 
-				echo "[INFO] Delay {$delay}".PHP_EOL;
-				sleep($delay);
+					$process_post = $Working->LikePost($post);
 
-				$delay = $delay+5;
-				$likepost++;
+					if ($process_post['status'] != false) {
+						echo "[".date('d-m-Y H:i:s')."] Sukses Like Post {$post['url']}".PHP_EOL;
+
+						echo "[INFO] Delay {$delay}".PHP_EOL;
+						sleep($delay);
+						$delay = $delay+5;
+						$likepost++;
+						$temp_post_process++;
+					}else{
+						echo "[".date('d-m-Y H:i:s')."] Gagal Like Post {$post['url']}".PHP_EOL;
+						echo "[INFO] Response : {$process['response']}".PHP_EOL;			
+					}			
+				}
+
+				if ($like_comment == 'y') 
+				{
+					echo "[INFO] Membaca Komentar post : {$post['id']}".PHP_EOL;
+
+					$comments = $Working->GetComment($post['code']);
+					if (!$comments) 
+					{
+						echo "[INFO] Tidak ada komentar pada post : {$post['id']}".PHP_EOL;
+						continue;
+					}
+
+					foreach ($comments as $comment) 
+					{
+
+						/* when likepost 5 reset sleep value to default */
+						if ($likepost >= 5) {
+							$delay = $delay_default;
+							$likepost = 0;
+						}
+
+						echo "[INFO] Proses Like Comment {$comment['id']}".PHP_EOL;
+
+						$process_comment = $Working->LikeComment($comment);
+
+						if ($process_comment['status'] != false) {
+							echo "[".date('d-m-Y H:i:s')."] Sukses Like Komentar {$comment['id']}".PHP_EOL;
+
+
+							echo "[INFO] Delay {$delay}".PHP_EOL;
+							sleep($delay);
+
+							$delay = $delay+5;
+							$likepost++;
+
+						}else{
+							echo "[".date('d-m-Y H:i:s')."] Gagal Like Komentar {$comment['id']}".PHP_EOL;
+							echo "[INFO] Response : {$process_comment['response']}".PHP_EOL;			
+						}
+
+
+					}
+				}
+
+				if ($temp_post_process < 1) 
+				{
+					echo "[INFO] Tidak ditemukan Post terbaru, Coba lagi setelah {$delayfeed} detik".PHP_EOL;
+					sleep($delayfeed);
+
+					$delayfeed = $delayfeed*rand(2,3);
+					$nofeed++;
+
+					continue;
+				}
+
+
+
 			}
 
 		}		

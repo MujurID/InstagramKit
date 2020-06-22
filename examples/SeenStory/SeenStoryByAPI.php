@@ -4,55 +4,78 @@ require "../../vendor/autoload.php";
 use Riedayme\InstagramKit\InstagramFeedStoryAPI;
 use Riedayme\InstagramKit\InstagramSeenStoryAPI;
 
-$datacookie = 'yourcookie';
+$datacookie = 'csrftoken=774rNGrfgv6ar6CinLorwvzAOXKGAy5F;rur=ASH;ds_user_id=31310607724;urlgen=\"{\\\"180.244.234.177\\\": 7713}:1jmq6F:Ebmk4cYBCu3rpLqHxJNA4uFCBUI\";sessionid=31310607724%3AD3BnzqxHNaIDKz%3A22;';
 
 $user_ids = ['13320596140'];
 
 $readstory = new InstagramFeedStoryAPI();
 $readstory->SetCookie($datacookie);
-$StoryUser = $readstory->GetStoryUser($user_ids);
+$datastory = $readstory->GetStoryUser($user_ids);
+$StoryUser = $readstory->ExtractStoryUser($datastory);
 
 // echo json_encode($StoryUser);
 // exit;
 
 $seenstory = new InstagramSeenStoryAPI();
 $seenstory->SetCookie($datacookie);
-$seenstory->SetOption([
-  'story_questions' => [
-    'active' => true,
-    'message' => 'wih mantap bosqu~'
-  ],
-  'story_polls' => [
-    'active' => true,
-    'vote' => rand(0,1)
-  ],
-  'story_countdowns' => [
-    'active' => true
-  ],
-  'story_sliders' => [
-    'active' => true,
-    'vote' => '1'
-  ],
-  'story_quizs' => [
-    'active' => true
-  ],
-]);
 
-foreach ($StoryUser as $story) {
+/* mass seen story */
+// $BuildSeenStory = $seenstory->BuildSeenStory($StoryUser);
+// $results = $seenstory->Process($BuildSeenStory);
 
-  $results = $seenstory->SeenStoryByAPI($story);
-  echo "<pre>";
-  var_dump($results);
-  echo "</pre>";
-}
+// echo "<pre>";
+// var_dump($results);
+// echo "</pre>";
 
 /*
-array(3) {
+array(2) {
   ["status"]=>
   bool(true)
-  ["id"]=>
-  string(19) "2334166284923520094"
-  ["username"]=>
-  string(12) "fauzan121002"
+  ["response"]=>
+  string(20) "success seen 3 story"
+}
+*/
+
+/* vote story */
+$process_vote = array();
+if (array_key_exists('status', $StoryUser)) die($StoryUser['response']);
+foreach ($StoryUser as $storydata) {
+  if ($storydata['story_detail']['type'] == 'questions') 
+  {
+    $answer = 'test answer';
+    $process_vote[] = $seenstory->AnswerQuestions($storydata,$answer);
+  }
+  elseif ($storydata['story_detail']['type'] == 'polls') 
+  {
+    $process_vote[] = $seenstory->VotePolls($storydata,'1');
+  }
+  elseif ($storydata['story_detail']['type'] == 'countdowns') 
+  {
+    $process_vote[] = $seenstory->FollowCountdowns($storydata);
+  }
+  elseif ($storydata['story_detail']['type'] == 'sliders') 
+  {
+    $min = 10; 
+    $max = 200;
+    $point = ( mt_rand( $min, $max ) / 100 );
+    $point = ($point > 1 ? 1 : $point);
+    $process_vote[] = $seenstory->VoteSliders($storydata,$point);
+  }
+  elseif ($storydata['story_detail']['type'] == 'quizs') 
+  {
+    $process_vote[] = $seenstory->AnswerQuizs($storydata);
+  }
+}
+
+echo "<pre>";
+var_dump($process_vote);
+echo "</pre>";
+
+/*
+array(2) {
+  ["status"]=>
+  bool(true)
+  ["response"]=>
+  string(20) "success seen 3 story"
 }
 */

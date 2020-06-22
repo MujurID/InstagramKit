@@ -10,7 +10,9 @@ Class InstagramResourceUser
 	{
 		// 7c8a1055f69ff97dc201e752cf6f0093
 
-		$url = 'https://www.instagram.com/graphql/query/?query_hash=7c16654f22c819fb63d1183034a5162f&variables=%7B%22user_id%22%3A%22'.$userid.'%22%2C%22include_chaining%22%3Atrue%2C%22include_reel%22%3Atrue%2C%22include_suggested_users%22%3Afalse%2C%22include_logged_out_extras%22%3Afalse%2C%22include_highlight_reels%22%3Afalse%7D';
+		// $url = 'https://www.instagram.com/graphql/query/?query_hash=7c16654f22c819fb63d1183034a5162f&variables=%7B%22user_id%22%3A%22'.$userid.'%22%2C%22include_chaining%22%3Atrue%2C%22include_reel%22%3Atrue%2C%22include_suggested_users%22%3Afalse%2C%22include_logged_out_extras%22%3Afalse%2C%22include_highlight_reels%22%3Afalse%7D';
+		
+		$url = 'https://www.instagram.com/graphql/query/?query_hash=7c16654f22c819fb63d1183034a5162f&variables={"user_id":"'.$userid.'","include_chaining":false,"include_reel":true,"include_suggested_users":false,"include_logged_out_extras":false,"include_highlight_reels":false}';
 
 		$headers = array();
 		$headers[] = "User-Agent: ". InstagramUserAgent::Get('Windows');
@@ -111,7 +113,23 @@ Class InstagramResourceUser
 		return json_decode($access['body'],true);
 	}
 
-	function GetUserIdByScraping($username)
+	public static function GetUserIdByAPI($cookie,$username)
+	{
+
+		$url = 'https://i.instagram.com/api/v1/users/' . $username . '/usernameinfo';
+
+		$useragent = InstagramUserAgent::Get('Android');
+
+		$access = InstagramHelperAPI::curl($url, false , false, $cookie, $useragent);
+
+		$response = json_decode($access['body'],true);
+
+		$userid = $response['user']['pk'];
+
+		return $userid;
+	}	
+
+	public function GetUserIdByScraping($username)
 	{
 		$url      = "https://www.instagram.com/" . $username;
 		$html     = file_get_contents($url);
