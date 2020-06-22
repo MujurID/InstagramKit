@@ -451,7 +451,8 @@ Class InstagramStoryVoteKuy
 
 		echo "[INFO] Membaca Feed Story dari ".count($FollowersList)." User".PHP_EOL;
 
-		$StoryUser = $readstory->GetStoryUser($FollowersList);
+		$DataStory = $readstory->GetStoryUser($FollowersList);
+		$StoryUser = $readstory->ExtractStoryUser($DataStory);
 
 		if (!$StoryUser) return 'failed_get_story_user';
 		
@@ -478,153 +479,177 @@ Class InstagramStoryVoteKuy
 		return $StoryList;	
 	}
 
-    public function SeenStory($story)
-    {
+	public function SeenStory($story)
+	{
+		$seenstory = new InstagramSeenStoryAPI();
+		$seenstory->SetCookie($datacookie);
 
-    	$count_today = self::ReadLogDaily(strtolower($this->username));
+		/* mass seen story */
+		$BuildSeenStory = $seenstory->BuildSeenStory($story);
+		$results = $seenstory->Process($BuildSeenStory);
 
-    	if ($count_today >= $this->limit_per_day) {
-    		$startdate = date('Y-m-d H:i:s'); 
-    		$enddate = date('Y-m-d')."23:59:59"; 
-    		$remain_today = strtotime($enddate)-strtotime($startdate); 
+		if ($results['status'] != false) {			
 
-    		echo "[INFO] Telah mencapai batas limit perharinya, delay selama {$remain_today} detik".PHP_EOL;
+			$this->count_process = $this->count_process + count($story);
 
-    		sleep($remain_today);
-    	}
+			echo "[".date('d-m-Y H:i:s')."] Success Seen All Story | Total Process : {$this->count_process} ".PHP_EOL;
+			echo "[INFO] Response : {$results['story_response']}".PHP_EOL;
 
-    	/* sync story data with log file */
-    	$sync = self::SyncStory($story['id']);
-    	if ($sync) 
-    	{
-    		echo "[SKIP] {$story['id']}, Story sudah diproses.".PHP_EOL;
-    		return false;
-    	}
+			return true;
+		}else{
+			echo "[".date('d-m-Y H:i:s')."] Failed Seen All Story".PHP_EOL;
+			echo "[INFO] Response : {$results['response']}".PHP_EOL;
+			return false;
+		}		
+	}
 
-    	if ($story['story_detail']['type'] == 'questions') {
-    		if ($this->time_quesiton AND strtotime(date('Y-m-d H:i:s')) <= strtotime($this->time_quesiton)) {
-    			echo "[SKIP] Skip Story Question sampai : {$this->time_quesiton}".PHP_EOL;
-    			return false;
-    		}
-    	}		
+	public function VoteStory($story)
+	{
 
-    	echo "[INFO] Proses Seen Story {$story['username']}||{$story['id']}".PHP_EOL;
+		$count_today = self::ReadLogDaily(strtolower($this->username));
 
-    	$seenstory = new InstagramSeenStoryAPI();
-    	$seenstory->SetCookie($this->cookie);
-    	$seenstory->SetOption([
-    		'story_questions' => [
-    		'active' => $this->status_story_questions,
-    		'message' => self::GetShuffleMessage($this->current_loop_message)
-    		],
-    		'story_polls' => [
-    		'active' => $this->status_story_polls,
-    		'vote' => '1'
-    		],
-    		'story_countdowns' => [
-    		'active' => $this->status_story_countdowns
-    		],
-    		'story_sliders' => [
-    		'active' => $this->status_story_sliders,
-    		'vote' => '1'
-    		],
-    		'story_quizs' => [
-    		'active' => $this->status_story_quizs
-    		],
-    		]);		
+		if ($count_today >= $this->limit_per_day) {
+			$startdate = date('Y-m-d H:i:s'); 
+			$enddate = date('Y-m-d')."23:59:59"; 
+			$remain_today = strtotime($enddate)-strtotime($startdate); 
 
-    	$results = $seenstory->SeenStoryByAPI($story);
+			echo "[INFO] Telah mencapai batas limit perharinya, delay selama {$remain_today} detik".PHP_EOL;
 
-    	if ($results['status'] != false) {			
+			sleep($remain_today);
+		}
 
-    		$this->count_process = $this->count_process + 1; 
+		/* sync story data with log file */
+		$sync = self::SyncStory($story['id']);
+		if ($sync) 
+		{
+			echo "[SKIP] {$story['id']}, Story sudah diproses.".PHP_EOL;
+			return false;
+		}
 
-    		echo "[".date('d-m-Y H:i:s')."] Success Seen Story {$story['id']} | Type : {$story['story_detail']['type']} | Total Process : {$this->count_process} ".PHP_EOL;
-    		echo "[INFO] Response : {$results['story_response']}".PHP_EOL;
+		if ($story['story_detail']['type'] == 'questions') {
+			if ($this->time_quesiton AND strtotime(date('Y-m-d H:i:s')) <= strtotime($this->time_quesiton)) {
+				echo "[SKIP] Skip Story Question sampai : {$this->time_quesiton}".PHP_EOL;
+				return false;
+			}
+		}		
 
-    		self::SaveLog(strtolower($this->username),$story['id']);
-    		self::SaveLogDaily(strtolower($this->username),$story['id']);
+		echo "[INFO] Proses Seen Story {$story['username']}||{$story['id']}".PHP_EOL;
 
-    		if ($story['story_detail']['type'] == 'questions') {
-    			$limit_process = InstagramHelper::GetSleepTimeByLimit(80);
-    			$this->time_quesiton = date('Y-m-d H:i:s',strtotime("+{$limit_process} seconds"));
-    			return 'questions';
-    		}
+		$seenstory = new InstagramSeenStoryAPI();
+		$seenstory->SetCookie($this->cookie);
+		$seenstory->SetOption([
+			'story_questions' => [
+			'active' => $this->status_story_questions,
+			'message' => self::GetShuffleMessage($this->current_loop_message)
+			],
+			'story_polls' => [
+			'active' => $this->status_story_polls,
+			'vote' => '1'
+			],
+			'story_countdowns' => [
+			'active' => $this->status_story_countdowns
+			],
+			'story_sliders' => [
+			'active' => $this->status_story_sliders,
+			'vote' => '1'
+			],
+			'story_quizs' => [
+			'active' => $this->status_story_quizs
+			],
+			]);		
 
-    		return 'other';
-    	}else{
-    		echo "[".date('d-m-Y H:i:s')."] Failed Seen Story {$story['id']} | Type : {$story['story_detail']['type']}".PHP_EOL;
-    		echo "[INFO] Response : {$results['response']}".PHP_EOL;
-    		return false;
-    	}
-    }
+		$results = $seenstory->SeenStoryByAPI($story);
 
-    public function GetShuffleMessage($index)
-    {
+		if ($results['status'] != false) {			
 
-    	$message = explode('|', $this->question_message);
+			$this->count_process = $this->count_process + 1; 
 
-    	/* reset index to 0 */
-    	if ($index >= count($message)) {
-    		$index = 0;
-    		$this->current_loop_message = 1;
-    	}else{
-    		$this->current_loop_message = $this->current_loop_message + 1;
-    	}
+			echo "[".date('d-m-Y H:i:s')."] Success Seen Story {$story['id']} | Type : {$story['story_detail']['type']} | Total Process : {$this->count_process} ".PHP_EOL;
+			echo "[INFO] Response : {$results['story_response']}".PHP_EOL;
 
-    	return trim($message[$index]);		
-    }
+			self::SaveLog(strtolower($this->username),$story['id']);
+			self::SaveLogDaily(strtolower($this->username),$story['id']);
 
-    public function SyncStory($storyid)
-    {
+			if ($story['story_detail']['type'] == 'questions') {
+				$limit_process = InstagramHelper::GetSleepTimeByLimit(80);
+				$this->time_quesiton = date('Y-m-d H:i:s',strtotime("+{$limit_process} seconds"));
+				return 'questions';
+			}
 
-    	$ReadLog = self::ReadLog(strtolower($this->username));
+			return 'other';
+		}else{
+			echo "[".date('d-m-Y H:i:s')."] Failed Seen Story {$story['id']} | Type : {$story['story_detail']['type']}".PHP_EOL;
+			echo "[INFO] Response : {$results['response']}".PHP_EOL;
+			return false;
+		}
+	}
 
-    	if (is_array($ReadLog) AND in_array($storyid, $ReadLog)) 
-    	{
-    		return true;
-    	}
+	public function GetShuffleMessage($index)
+	{
 
-    	return false;
-    }
+		$message = explode('|', $this->question_message);
 
-    public function ReadLog($identity)
-    {		
+		/* reset index to 0 */
+		if ($index >= count($message)) {
+			$index = 0;
+			$this->current_loop_message = 1;
+		}else{
+			$this->current_loop_message = $this->current_loop_message + 1;
+		}
 
-    	$logfilename = "log/story-data-svk-{$identity}-".date('m-Y');
-    	$log_id = array();
-    	if (file_exists($logfilename)) 
-    	{
-    		$log_id = file_get_contents($logfilename);
-    		$log_id  = explode(PHP_EOL, $log_id);
-    	}
+		return trim($message[$index]);		
+	}
 
-    	return $log_id;
-    }
+	public function SyncStory($storyid)
+	{
 
-    public function SaveLog($identity,$datastory)
-    {
-    	return file_put_contents("log/story-data-svk-{$identity}-".date('m-Y'), $datastory.PHP_EOL, FILE_APPEND);
-    }	
+		$ReadLog = self::ReadLog(strtolower($this->username));
 
-    public function ReadLogDaily($identity)
-    {		
+		if (is_array($ReadLog) AND in_array($storyid, $ReadLog)) 
+		{
+			return true;
+		}
 
-    	$logfilename = "log/count-story-data-svk-{$identity}-".date('d-m-Y');
-    	$log_id = array();
-    	if (file_exists($logfilename)) 
-    	{
-    		$log_id = file_get_contents($logfilename);
-    		$log_id  = explode(PHP_EOL, $log_id);
-    	}
+		return false;
+	}
 
-    	return count($log_id) - 1;
-    }
+	public function ReadLog($identity)
+	{		
 
-    public function SaveLogDaily($identity,$datastory)
-    {
-    	return file_put_contents("log/count-story-data-svk-{$identity}-".date('d-m-Y'), $datastory.PHP_EOL, FILE_APPEND);
-    }	
+		$logfilename = "log/story-data-svk-{$identity}-".date('m-Y');
+		$log_id = array();
+		if (file_exists($logfilename)) 
+		{
+			$log_id = file_get_contents($logfilename);
+			$log_id  = explode(PHP_EOL, $log_id);
+		}
+
+		return $log_id;
+	}
+
+	public function SaveLog($identity,$datastory)
+	{
+		return file_put_contents("log/story-data-svk-{$identity}-".date('m-Y'), $datastory.PHP_EOL, FILE_APPEND);
+	}	
+
+	public function ReadLogDaily($identity)
+	{		
+
+		$logfilename = "log/count-story-data-svk-{$identity}-".date('d-m-Y');
+		$log_id = array();
+		if (file_exists($logfilename)) 
+		{
+			$log_id = file_get_contents($logfilename);
+			$log_id  = explode(PHP_EOL, $log_id);
+		}
+
+		return count($log_id) - 1;
+	}
+
+	public function SaveLogDaily($identity,$datastory)
+	{
+		return file_put_contents("log/count-story-data-svk-{$identity}-".date('d-m-Y'), $datastory.PHP_EOL, FILE_APPEND);
+	}	
 }
 
 Class Worker
@@ -677,6 +702,9 @@ Class Worker
 				continue;
 			}
 
+			/* send mass viewing */
+			$process_mass_viewing = $Working->SeenStory($StoryList)
+
 			foreach ($StoryList as $key => $story) {
 
 				/* when seenstory 5 reset sleep value to default */
@@ -685,9 +713,9 @@ Class Worker
 					$seenstory = 0;
 				}	
 
-				$process_seen = $Working->SeenStory($story);
+				$process_vote = $Working->VoteStory($story);
 
-				if ($process_seen) 
+				if ($process_vote) 
 				{
 
 					echo "[INFO] Delay {$delay}".PHP_EOL;
