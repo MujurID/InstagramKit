@@ -11,9 +11,10 @@ composer require riedayme/instagramkit dev-master
 View on examples folder
 ```
 
-## Featured
-* Auto Like Time Line
+## Featured Scripts Ready to Run
+* Auto Like Time Line [WITH COMMENTS]
 * Auto View Story
+* Mass View and Vote Story [NEW]
 ```
 the Script locate on folder scripts
 
@@ -22,12 +23,19 @@ php AVS.php
 
 Run Auto Like TimeLine :
 php ALT.php
+
+Run Auto Mass View And Vote Story [Story Vote Kuy]
+php SVK.php
 ```
 
 ## Change Log
+**20 Juni 2020**
+- Add Scripts Story Vote Kuy
+- Fix Bug
+
 **6 Juni 2020**
 - Release
 
 **10 Juni 2020**
-- Update Script, fix the bug
+- Fix Bug
 - Add Story script
