@@ -94,7 +94,7 @@ Class InstagramAutoViewStory
 
 	public function SaveLogin($data){
 
-		$filename = 'log/log-data.json';
+		$filename = 'data/sc-global.json';
 
 		if (file_exists($filename)) {
 			$read = file_get_contents($filename);
@@ -122,7 +122,7 @@ Class InstagramAutoViewStory
 	public function CheckPreviousData()
 	{
 
-		$filename = 'log/log-data.json';
+		$filename = 'data/sc-global.json';
 		if (file_exists($filename)) {
 			$read = file_get_contents($filename);
 			$read = json_decode($read,TRUE);
@@ -139,7 +139,7 @@ Class InstagramAutoViewStory
 	public function ReadPreviousData($data)
 	{
 
-		$filename = 'log/log-data.json';
+		$filename = 'data/sc-global.json';
 		if (file_exists($filename)) {
 			$read = file_get_contents($filename);
 			$read = json_decode($read,TRUE);

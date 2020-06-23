@@ -125,7 +125,7 @@ Class InputHelper
 
 		if ($data) return $data;
 
-		echo "Masukan Daftar Jawaban Pertanyaan pisah dengan tanda | : ".PHP_EOL;
+		echo "Masukan jawaban question story, pisah dengan tanda | : ".PHP_EOL;
 
 		$input = trim(fgets(STDIN));
 
@@ -203,6 +203,7 @@ Class InstagramStoryVoteKuy
 	public $count_process_seen = 0;
 	public $count_process_vote = 0;	
 
+	public $limit_process_question = 80;
 	public $time_quesiton = false;
 
 	public function Auth($data) 
@@ -286,6 +287,7 @@ Class InstagramStoryVoteKuy
 					$results = InstagramAuthAPI::CheckPointSolve($required);
 
 					if ( $is_connected_count == 3 ) {
+						echo "[INFO] 3x Kode Salah, ERROR".PHP_EOL;
 						die($results['response']);
 					}
 
@@ -402,8 +404,8 @@ Class InstagramStoryVoteKuy
 				echo "[INFO] User {$username} | id => [$getuserid]".PHP_EOL;
 
 				$this->targets[] = [
-					'userid' => $getuserid,
-					'username' => $username
+				'userid' => $getuserid,
+				'username' => $username
 				];
 			}else{
 				echo "[INFO] Failed Read User {$username}".PHP_EOL;
@@ -416,8 +418,6 @@ Class InstagramStoryVoteKuy
 	public function GetShuffleTarget($index){
 
 		$targetlist = $this->targets;
-
-		//echo json_encode($targetlist).PHP_EOL;
 
 		/* reset index to 0 */
 		if ($index >= count($targetlist)) {
@@ -511,8 +511,8 @@ Class InstagramStoryVoteKuy
 			if(!$user['latest_reel_media']) continue;
 
 			$results[] = [
-				'userid' => $user['pk'],
-				'username' => $user['username']
+			'userid' => $user['pk'],
+			'username' => $user['username']
 			];
 
 		}
@@ -601,8 +601,8 @@ Class InstagramStoryVoteKuy
 
 			$this->count_process_seen = $this->count_process_seen + count($storydata);
 
-			echo "[".date('d-m-Y H:i:s')."] Success Seen All Story | Total Process Seen : {$this->count_process_seen} ".PHP_EOL;
-			echo "[INFO] Response : {$results['response']}".PHP_EOL;
+			echo PHP_EOL."[".date('d-m-Y H:i:s')."] Success Seen All Story | Total Process Seen : {$this->count_process_seen} ".PHP_EOL;
+			echo "[INFO] Response : {$results['response']}".PHP_EOL.PHP_EOL;
 
 			/* create log storydata default */
 			foreach ($storydata as $story) {
@@ -614,8 +614,10 @@ Class InstagramStoryVoteKuy
 
 			return true;
 		}else{
+			echo PHP_EOL."!<-----------------[FAILED PROCESS]------------------>!".PHP_EOL;
 			echo "[".date('d-m-Y H:i:s')."] Failed Seen All Story".PHP_EOL;
 			echo "[INFO] Response : {$results['response']}".PHP_EOL;
+			echo "!<-----------------[FAILED PROCESS]------------------>!".PHP_EOL.PHP_EOL;
 			return false;
 		}		
 	}
@@ -675,22 +677,24 @@ Class InstagramStoryVoteKuy
 
 			$this->count_process_vote = $this->count_process_vote + 1; 
 
-			echo "[".date('d-m-Y H:i:s')."] Success Vote Story {$story['id']} | Type : {$story['story_detail']['type']} | Total Process Vote : {$this->count_process_vote} ".PHP_EOL;
-			echo "[INFO] Response : {$process_vote['response']}".PHP_EOL;
+			echo PHP_EOL."[".date('d-m-Y H:i:s')."] Success Vote Story {$story['id']} | Type : {$story['story_detail']['type']} | Total Process Vote : {$this->count_process_vote} ".PHP_EOL;
+			echo "[INFO] Response : {$process_vote['response']}".PHP_EOL.PHP_EOL;
 
 			self::SaveLog(strtolower($this->username),$story['id']);
 			self::SaveLogDaily(strtolower($this->username),$story['id']);
 
 			if ($story['story_detail']['type'] == 'questions') {
-				$limit_process = InstagramHelper::GetSleepTimeByLimit(80);
+				$limit_process = InstagramHelper::GetSleepTimeByLimit($this->limit_process_question);
 				$this->time_quesiton = date('Y-m-d H:i:s',strtotime("+{$limit_process} seconds"));
 				return 'questions';
 			}
 
 			return 'other';
 		}else{
+			echo PHP_EOL."!<-----------------[FAILED PROCESS]------------------>!".PHP_EOL;
 			echo "[".date('d-m-Y H:i:s')."] Failed Vote Story {$story['id']} | Type : {$story['story_detail']['type']}".PHP_EOL;
 			echo "[INFO] Response : {$process_vote['response']}".PHP_EOL;
+			echo "!<-----------------[FAILED PROCESS]------------------>!".PHP_EOL.PHP_EOL;			
 			return false;
 		}
 	}
