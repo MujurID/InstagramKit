@@ -1,7 +1,7 @@
 <?php  
 /**
 * InstagramStoryVoteKuy
-* Last Update 21 Juni 2020
+* Last Update 23 Juni 2020
 * Author : Faanteyki
 * Semaksimal mungkin mengurangi request terlalu banyak 
 * ke api instagram untuk mengurangi limit.
@@ -301,6 +301,9 @@ Class InstagramStoryVoteKuy
 					$is_connected_count += 1;
 				} while ( ! $is_connected );
 
+			}else{
+				/* remove response for saving login */
+				unset($results['response']);
 			}
 
 			echo "[INFO] Menyimpan Data Login".PHP_EOL;
@@ -404,8 +407,8 @@ Class InstagramStoryVoteKuy
 				echo "[INFO] User {$username} | id => [$getuserid]".PHP_EOL;
 
 				$this->targets[] = [
-				'userid' => $getuserid,
-				'username' => $username
+					'userid' => $getuserid,
+					'username' => $username
 				];
 			}else{
 				echo "[INFO] Failed Read User {$username}".PHP_EOL;
@@ -511,8 +514,8 @@ Class InstagramStoryVoteKuy
 			if(!$user['latest_reel_media']) continue;
 
 			$results[] = [
-			'userid' => $user['pk'],
-			'username' => $user['username']
+				'userid' => $user['pk'],
+				'username' => $user['username']
 			];
 
 		}

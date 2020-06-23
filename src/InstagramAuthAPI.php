@@ -43,6 +43,7 @@ Class InstagramAuthAPI
 			$csrftoken = InstagramCookie::GetCSRFCookie($cookie);
 
 			return [
+				'response' => 'success_login',
 				'userid' => $userid,
 				'username' => $userinfo['username'], 
 				'photo' => $userinfo['photo'],
@@ -54,13 +55,14 @@ Class InstagramAuthAPI
 
 		}elseif ($response['error_type'] == 'checkpoint_challenge_required') {
 
-			$required['response'] = 'checkpoint';
-			$required['url'] = $response['challenge']['url'];
-			$required['cookie'] = InstagramCookie::ReadCookie($login['header']);
-			$required['csrftoken'] = InstagramCookie::GetCSRFCookie($required['cookie']);
-			$required['guid'] = $guid;
-
-			return $required;
+			return [
+				'response' => 'checkpoint',
+				'url' => $response['challenge']['url'],
+				'cookie' => InstagramCookie::ReadCookie($login['header']),
+				'csrftoken' => InstagramCookie::GetCSRFCookie($required['cookie']),
+				'guid' => $guid
+			];
+			
 		}
 
 		die($response['message']);
