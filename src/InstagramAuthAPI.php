@@ -55,11 +55,12 @@ Class InstagramAuthAPI
 
 		}elseif ($response['error_type'] == 'checkpoint_challenge_required') {
 
+			$cookie = InstagramCookie::ReadCookie($login['header']);
 			return [
 				'response' => 'checkpoint',
 				'url' => $response['challenge']['url'],
-				'cookie' => InstagramCookie::ReadCookie($login['header']),
-				'csrftoken' => InstagramCookie::GetCSRFCookie($required['cookie']),
+				'cookie' => $cookie,
+				'csrftoken' => InstagramCookie::GetCSRFCookie($cookie),
 				'guid' => $guid
 			];
 			
@@ -95,9 +96,17 @@ Class InstagramAuthAPI
 				'response' => $response['extraData']['content'][1]['text']
 			];
 		}else{
+
+
+			if (isset($response['message'])) {
+				$message = $response['message'];
+			}else{
+				$message = $response['challenge']['errors'][0];
+			}
+
 			return [
 				'status' => false,
-				'response' => $response['challenge']['errors'][0]
+				'response' => $message
 			];
 		}
 	}
