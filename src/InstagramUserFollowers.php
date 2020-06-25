@@ -24,12 +24,11 @@ Class InstagramUserFollowers
 		}
 
 		$headers = array();
-		$headers[] = "Cookie: ".$this->cookie;
+		$headers[] = "User-Agent: ". InstagramUserAgent::Get('Windows');
 		$headers[] = "X-Csrftoken: ".$this->csrftoken;
+		$headers[] = "Cookie: ". $this->cookie;
 
-		$useragent = InstagramUserAgent::Get('Windows');
-
-		$access = InstagramHelper::curl($url, false , $headers, false, $useragent);
+		$access = InstagramHelper::curl($url, false , $headers);
 
 		$response = json_decode($access['body'],true);
 

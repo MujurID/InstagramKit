@@ -1,58 +1,32 @@
 <?php  
-function get_limit($delay){
-	$cron = 5;
-	$dayinminutes = 1440;
-	$total_cron_in_one_day = $dayinminutes/$cron;
-	$process = $delay;
-	$per_cron_process = $process/$total_cron_in_one_day;
-	$limit = ceil($per_cron_process);
-	return $limit;
+$ch = curl_init();
+
+curl_setopt($ch, CURLOPT_URL, 'https://www.instagram.com/graphql/query/?query_hash=c76146de99bb02f6415203be841dd25a&variables=%7B%22id%22%3A%227673389999%22%2C%22include_reel%22%3Atrue%2C%22fetch_mutual%22%3Atrue%2C%22first%22%3A24%7D');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+
+curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
+
+$headers = array();
+$headers[] = 'Authority: www.instagram.com';
+$headers[] = 'Cache-Control: no-cache';
+$headers[] = 'Upgrade-Insecure-Requests: 1';
+$headers[] = 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36';
+$headers[] = 'Accept: image/webp,image/apng,image/*,*/*;q=0.8';
+$headers[] = 'Sec-Fetch-Site: same-origin';
+$headers[] = 'Sec-Fetch-Mode: no-cors';
+$headers[] = 'Sec-Fetch-User: ?1';
+$headers[] = 'Sec-Fetch-Dest: empty';
+$headers[] = 'Accept-Language: en-US,en;q=0.9,id;q=0.8';
+$headers[] = 'Cookie: csrftoken=k8CCs0jCOr4yqRwpylqfWy0D3yJKASMq;ds_user_id=31310607724;fbm_124024574287414=base_domain=.instagram.com;ig_did=FFEACD10-63D8-43C2-B401-42ECE4037BE0;mid=Xlj5PgALAAGDe8LS6ehFhHVYc-jN;rur=VLL;sessionid=31310607724%3Ay2SJ6kcsSBEfgE%3A15;shbid=8056;shbts=1592989138.5202322;urlgen="{\"180.242.152.195\": 7713}:1joK9B:z-uQOJ_BPTD_M4paG25c_zzFsCM";';
+$headers[] = 'Pragma: no-cache';
+$headers[] = 'Referer: https://www.instagram.com/graphql/query/?query_hash=c76146de99bb02f6415203be841dd25a^&variables=^%^7B^%^22id^%^22^%^3A^%^227673389999^%^22^%^2C^%^22include_reel^%^22^%^3Atrue^%^2C^%^22fetch_mutual^%^22^%^3Atrue^%^2C^%^22first^%^22^%^3A24^%^7D';
+curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+$result = curl_exec($ch);
+if (curl_errno($ch)) {
+    echo 'Error:' . curl_error($ch);
 }
+curl_close($ch);
 
-function get_sleep_time_by_limit($limit){
-
-	$dayinseconds = 86400;
-
-	$sleep = $dayinseconds/$limit;
-
-	return ceil($sleep);
-}
-
-$limit_process = get_sleep_time_by_limit(80);
-// echo $limit_process;
-// exit;
-$time_quesiton = false;
-$datastory = ['question','pool','pool','question','pool'];
-
-while (true) {
-	foreach ($datastory as $story) {
-		if ($story == 'question') {
-
-			if ($time_quesiton AND strtotime(date('Y-m-d H:i:s')) <= strtotime($time_quesiton)) {
-				echo "skip question next process time {$time_quesiton}".PHP_EOL;
-				continue;
-			}
-			$time_quesiton = date('Y-m-d H:i:s',strtotime("+{$limit_process} seconds"));
-		}
-
-		echo $story.PHP_EOL;
-		// echo date('Y-m-d H:i:s').PHP_EOL;
-		sleep(1);
-	}
-}
-
-/**
- * jika waktu saat ini sudah melewati next time process  
- * maka bisa proses lagi > set next time again
- * jika belum maka diskip lanjut ke story selanjutnya 
- 
-	
-ex :
-loop
-	vote story 1 > answer question > if answer question set next time process question time
-	vote story 2 > answer pool > process
-	vote story 3 > answer question > check if this time >= next time process ? process : skip
-	vote story 3 > answer slider > process
-	...
-	... 
- */
+echo $result;

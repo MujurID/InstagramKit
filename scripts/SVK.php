@@ -189,8 +189,8 @@ Class InstagramStoryVoteKuy
 	public $only_vote;
 	public $targets;
 
-	public $current_loop = 0;
-	public $current_loop_message = 0;	
+	public $current_loop_target = 0;
+	public $current_loop_message = 0;		
 
 	public $next_id = array();
 
@@ -205,6 +205,10 @@ Class InstagramStoryVoteKuy
 
 	public $limit_process_question = 80;
 	public $time_quesiton = false;
+
+	public $delay_bot = 60;
+	public $delay_bot_default = 60;
+	public $delay_bot_count = 0;
 
 	public function Auth($data) 
 	{
@@ -398,12 +402,15 @@ Class InstagramStoryVoteKuy
 		echo "[INFO] Membaca UserId Target".PHP_EOL;
 
 		$this->targets = array();
+
 		foreach ($targetlist as $username) {
 
 			$username = trim($username);
-			$getuserid = InstagramResourceUser::GetUserIdByAPI($this->cookie,$username);
+			$getuserid = InstagramResourceUser::GetUserIdByWeb($username);						
+			// $getuserid = InstagramResourceUser::GetUserIdByAPI($this->cookie,$username);
+			// $getuserid = InstagramResourceUser::GetUserIdByScraping($username);			
 
-			if (is_int($getuserid)) {
+			if ($getuserid) {
 				echo "[INFO] User {$username} | id => [$getuserid]".PHP_EOL;
 
 				$this->targets[] = [
@@ -425,9 +432,9 @@ Class InstagramStoryVoteKuy
 		/* reset index to 0 */
 		if ($index >= count($targetlist)) {
 			$index = 0;
-			$this->current_loop = 1;
+			$this->current_loop_target = 1;
 		}else{
-			$this->current_loop = $this->current_loop + 1;
+			$this->current_loop_target = $this->current_loop_target + 1;
 		}
 
 		return $targetlist[$index];
@@ -436,7 +443,7 @@ Class InstagramStoryVoteKuy
 	public function GetFollowersTarget()
 	{
 
-		$getTarget = self::GetShuffleTarget($this->current_loop);
+		$getTarget = self::GetShuffleTarget($this->current_loop_target);
 
 		$usernametarget = $getTarget['username'];
 		$useridtarget = $getTarget['userid'];
@@ -458,8 +465,8 @@ Class InstagramStoryVoteKuy
 
 		echo "[INFO] Berhasil mendapatkan ".count($results)." User".PHP_EOL;
 
-		// echo "[INFO] Delay 5".PHP_EOL;
-		sleep(5);
+		/* delay bot */
+		self::DelayBot();
 
 		return $results;
 	}
@@ -469,9 +476,6 @@ Class InstagramStoryVoteKuy
 		$readfollowers = new InstagramUserFollowers();
 		$readfollowers->SetCookie($this->cookie);
 		$userlist = $readfollowers->Process($useridtarget,$next_id);
-
-		// echo json_encode($userlist);
-		// exit;
 
 		/* get userlist failed */
 		if (!$userlist) return [];
@@ -545,9 +549,6 @@ Class InstagramStoryVoteKuy
 		$DataStory = $readstory->GetStoryUser($FollowersList);
 		$StoryUser = $readstory->ExtractStoryUser($DataStory);
 
-		// echo json_encode($StoryUser);
-		// exit;
-
 		if (isset($StoryUser['status']) AND !$StoryUser['status']) return 'failed_get_story_user';
 		
 		$StoryList = array();
@@ -572,6 +573,9 @@ Class InstagramStoryVoteKuy
 		}
 
 		echo "[INFO] Berhasil mendapatkan ".count($StoryList)." Story".PHP_EOL;
+
+		/* delay bot */
+		self::DelayBot();
 
 		return $StoryList;	
 	}
@@ -768,6 +772,21 @@ Class InstagramStoryVoteKuy
 	{
 		return file_put_contents("log/count-story-data-svk-{$identity}-".date('d-m-Y'), $datastory.PHP_EOL, FILE_APPEND);
 	}	
+
+	public function DelayBot()
+	{
+
+		/* reset sleep value to default */
+		if ($this->delay_bot_count >= 5) {
+			$this->delay_bot = $this->delay_bot_default;
+			$this->delay_bot_count = 0;
+		}	
+
+		echo "[INFO] Delay {$this->delay_bot}".PHP_EOL;
+		sleep($this->delay_bot);
+		$this->delay_bot = $this->delay_bot+5;
+		$this->delay_bot_count++;
+	}
 }
 
 Class Worker
