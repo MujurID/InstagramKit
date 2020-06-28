@@ -1,6 +1,6 @@
 <?php namespace Riedayme\InstagramKit;
 
-Class InstagramFeedStoryAPI
+Class InstagramUserStoryAPI
 {
 
 	public $cookie;	
@@ -10,61 +10,52 @@ Class InstagramFeedStoryAPI
 		$this->cookie = $data;
 	}
 
-	public function GetStoryList($userid)
-	{
-		// $url = 'https://i.instagram.com/api/v1/feed/reels_tray/';
-	}	
-
-	public function GetStoryUser($user_ids)
+	public function Process($user_ids)
 	{
 
 		$url = 'https://i.instagram.com/api/v1/feed/reels_media/';
 
 		$data = json_encode([
 			'user_ids' => $user_ids,
-			]);	
+		]);	
 
 		$postdata = InstagramHelperAPI::generateSignature($data);
 
 		$access = InstagramHelperAPI::curl($url, $postdata , false , $this->cookie , InstagramUserAgent::Get('Android'));
-
-		// echo $access['body'];
-		// exit;
 		
 		$response = json_decode($access['body'],true);
 
 		if ($response['status'] == 'ok' AND $response['reels'] != null) {		
 
 			return [
-			'status' => true,
-			'data' => $response
+				'status' => true,
+				'response' => $response
 			];
 
 		}else{
 
 			if ($response['status'] == 'ok') {
 
-				// story not found
 				return [
-				'status' => false,
-				'response' => 'no_story'
+					'status' => false,
+					'response' => 'no_story'
 				];
 			}
 
-			// failed get story
 			return [
-			'status' => false,
-			'response' => $access['body']
+				'status' => false,
+				'response' => $access['body']
 			];
 		}
 	}	
 
-	public function ExtractStoryUser($response)
+	public function Extract($response)
 	{
 
 		if (!$response['status']) return $response;
 
-		$reels = $response['data']['reels'];
+		$jsondata = $response['response'];
+		$reels = $jsondata['reels'];
 
 		$extract = array();
 		foreach ($reels as $key => $id) {
@@ -143,13 +134,13 @@ Class InstagramFeedStoryAPI
 				}					
 
 				$extract[] = [
-				'id' => $id,
-				'userid' => $userid,
-				'username' => $username,
-				'media' => $media,
-				'type' => $type,
-				'taken_at' => $taken_at,
-				'story_detail' => $story_data,						
+					'id' => $id,
+					'userid' => $userid,
+					'username' => $username,
+					'media' => $media,
+					'type' => $type,
+					'taken_at' => $taken_at,
+					'story_detail' => $story_data,						
 				];
 			}
 

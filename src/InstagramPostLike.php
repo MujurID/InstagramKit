@@ -28,13 +28,13 @@ Class InstagramPostLike
 		
 		if ($response['status'] == 'ok') {
 			return [
-			'status' => true,
-			'id' => $postid
+				'status' => true,
+				'response' => 'success like post '.$postid
 			];
 		}else{
 			return [
-			'status' => false,
-			'response' => $access['body']
+				'status' => false,
+				'response' => $access['body']
 			];
 		}
 

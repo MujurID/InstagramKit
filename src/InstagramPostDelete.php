@@ -12,35 +12,32 @@ Class InstagramPostDelete
 		$this->csrftoken = InstagramCookie::GetCSRFCookie($data);
 	}
 
-	public function Process($postdata)
+	public function Process($postid)
 	{
 
-		$success = array();
-		$failed = array();		
-		foreach ($postdata as $key => $post) {
+		$url = "https://www.instagram.com/create/{$postid}/delete/";
 
-			$url = "https://www.instagram.com/create/{$post}/delete/";
+		$headers = array();
+		$headers[] = "User-Agent: ". InstagramUserAgent::Get('Windows');
+		$headers[] = "X-Csrftoken: ".$this->csrftoken;
+		$headers[] = "Cookie: ". $this->cookie;
 
-			$headers = array();
-			$headers[] = "User-Agent: ". InstagramUserAgent::Get('Windows');
-			$headers[] = "X-Csrftoken: ".$this->csrftoken;
-			$headers[] = "Cookie: ". $this->cookie;
+		$access = InstagramHelper::curl($url, 'empty', $headers);
 
-			$access = InstagramHelper::curl($url, 'empty', $headers);
-
-			$response = json_decode($access['body']);
-
-			if ($response->status != 'ok') {
-				$failed[] = $post;
-			}else{
-				$success[] = $post;
-			}
+		$response = json_decode($access['body'],true);
+		
+		if ($response['status'] == 'ok') {
+			return [
+				'status' => true,
+				'response' => 'success delete post '.$postid
+			];
+		}else{
+			return [
+				'status' => false,
+				'response' => $access['body']
+			];
 		}
 
-		return [
-		'success' => count($success),
-		'failed' => count($failed)
-		];
 	}
 
 }

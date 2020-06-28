@@ -1,7 +1,7 @@
 <?php  
 /**
 * InstagramStoryVoteKuy
-* Last Update 23 Juni 2020
+* Last Update 28 Juni 2020
 * Author : Faanteyki
 * Semaksimal mungkin mengurangi request terlalu banyak 
 * ke api instagram untuk mengurangi limit.
@@ -14,7 +14,7 @@ use Riedayme\InstagramKit\InstagramChecker;
 use Riedayme\InstagramKit\InstagramResourceUser;
 use Riedayme\InstagramKit\InstagramUserFollowers;
 use Riedayme\InstagramKit\InstagramUserFollowersAPI;
-use Riedayme\InstagramKit\InstagramFeedStoryAPI;
+use Riedayme\InstagramKit\InstagramUserStoryAPI;
 use Riedayme\InstagramKit\InstagramSeenStoryAPI;
 
 date_default_timezone_set('Asia/Jakarta');
@@ -478,59 +478,50 @@ Class InstagramStoryVoteKuy
 		$userlist = $readfollowers->Process($useridtarget,$next_id);
 
 		/* get userlist failed */
-		if (!$userlist) return [];
-
-		$results = array();
-		$edges = $userlist['data']['user']['edge_followed_by']['edges'];
-		foreach ($edges as $node) {
-			$user = $node['node'];
-			$reel = $user['reel'];
-
-			if($user['is_private']) continue;
-			if(!$reel['latest_reel_media']) continue;
-
-			$results[] = $user['id'];
+		if (!$userlist['status']) {
+			return [];
 		}
 
-		$next_page = $userlist['data']['user']['edge_followed_by']['page_info'];
-		if ($next_page['has_next_page']) {
-			$this->next_id[$useridtarget] = $next_page['end_cursor'];
+		if ($userlist['cursor'] !== null) {
+			$this->next_id[$useridtarget] = $userlist['cursor'];
 		}else{
 			$this->next_id[$useridtarget] = false;
 		}
+
+		$results = $readfollowers->Extract($userlist);
 
 		return $results;
 	}
 
 	public function GetFollowersTargetByAPI($useridtarget,$next_id)
 	{
-		$readfollowers = new InstagramUserFollowersAPI();
-		$readfollowers->SetCookie($this->cookie);
-		$userlist = $readfollowers->Process($useridtarget,$next_id);
+		// $readfollowers = new InstagramUserFollowersAPI();
+		// $readfollowers->SetCookie($this->cookie);
+		// $userlist = $readfollowers->Process($useridtarget,$next_id);
 
-		/* get userlist failed */
-		if (!$userlist) return false;
+		// /* get userlist failed */
+		// if (!$userlist) return false;
 
-		$results = array();
-		foreach ($userlist['users'] as $key => $user) {
+		// $results = array();
+		// foreach ($userlist['users'] as $key => $user) {
 
-			if($user['is_private']) continue;
-			if(!$user['latest_reel_media']) continue;
+		// 	if($user['is_private']) continue;
+		// 	if(!$user['latest_reel_media']) continue;
 
-			$results[] = [
-				'userid' => $user['pk'],
-				'username' => $user['username']
-			];
+		// 	$results[] = [
+		// 		'userid' => $user['pk'],
+		// 		'username' => $user['username']
+		// 	];
 
-		}
+		// }
 
-		if ($userlist['next_max_id']) {
-			$this->next_id[$useridtarget] = $userlist['next_max_id'];
-		}else{
-			$this->next_id[$useridtarget] = false;
-		}
+		// if ($userlist['next_max_id']) {
+		// 	$this->next_id[$useridtarget] = $userlist['next_max_id'];
+		// }else{
+		// 	$this->next_id[$useridtarget] = false;
+		// }
 
-		return $results;
+		// return $results;
 	}
 
 	public function GetStory()
@@ -541,16 +532,25 @@ Class InstagramStoryVoteKuy
 		/* get FollowersList failed */
 		if (!$FollowersList) return 'failed_get_followers_list';
 
-		$readstory = new InstagramFeedStoryAPI();
+		foreach ($FollowersList as $userdata) {
+
+			if($userdata['is_private']) continue;
+			if(!$userdata['latest_reel_media']) continue;
+
+			$user_ids[] = $userdata['userid'];
+		}
+
+		$readstory = new InstagramUserStoryAPI();
 		$readstory->SetCookie($this->cookie);
 
 		echo "[INFO] Membaca Feed Story dari ".count($FollowersList)." User".PHP_EOL;
 
-		$DataStory = $readstory->GetStoryUser($FollowersList);
-		$StoryUser = $readstory->ExtractStoryUser($DataStory);
-
-		if (isset($StoryUser['status']) AND !$StoryUser['status']) return 'failed_get_story_user';
+		$allstory = $readstory->Process($user_ids);
 		
+		if (!$allstory['status']) return 'failed_get_story_user';
+
+		$StoryUser = $readstory->Extract($allstory);
+	
 		$StoryList = array();
 		foreach ($StoryUser as $story) {
 

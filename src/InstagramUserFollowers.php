@@ -32,11 +32,56 @@ Class InstagramUserFollowers
 
 		$response = json_decode($access['body'],true);
 
-		if ($response['status'] != 'ok') {
-			return false;
+		if ($response['status'] == 'ok' AND $response['data']['user']['edge_followed_by']['edges'] != null) {		
+
+			$cursor = $response['data']['user']['edge_followed_by']['page_info']['end_cursor'];
+
+			return [
+				'status' => true,
+				'response' => $response,
+				'cursor' => $cursor
+			];
+
+		}else{
+
+			if ($response['status'] == 'ok') {
+
+				return [
+					'status' => false,
+					'response' => 'no_followers'
+				];
+			}
+
+			return [
+				'status' => false,
+				'response' => $access['body']
+			];
 		}
 
-		return $response;
+	}
+
+	public function Extract($response){
+
+		if (!$response['status']) return $response;
+
+		$jsondata = $response['response'];
+		$edges = $jsondata['data']['user']['edge_followed_by']['edges'];
+
+		$extract = array();
+		foreach ($edges as $node) {
+			$user = $node['node'];
+			$reel = $user['reel'];
+
+			$extract[] = [
+				'userid' => $user['id'],
+				'username' => $user['username'],
+				'photo' => $user['profile_pic_url'],
+				'is_private' => $user['is_private'],
+				'latest_reel_media' => $reel['latest_reel_media'],
+			];
+		}
+
+		return $extract;
 	}
 
 }

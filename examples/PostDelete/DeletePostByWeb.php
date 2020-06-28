@@ -5,7 +5,7 @@ use Riedayme\InstagramKit\InstagramPostDelete;
 
 $datacookie = 'yourcookie';
 
-$postid[] = 'postid';
+$postid= 'postid';
 
 $deletepost = new InstagramPostDelete();
 $deletepost->SetCookie($datacookie);

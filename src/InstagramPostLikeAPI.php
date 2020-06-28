@@ -17,7 +17,7 @@ Class InstagramPostLikeAPI
 
 		$data = json_encode([
 			'media_id'   => $postid
-			]);
+		]);
 
 		$buildpostdata = InstagramHelperAPI::generateSignature($data);
 
@@ -27,13 +27,13 @@ Class InstagramPostLikeAPI
 		
 		if ($response['status'] == 'ok') {
 			return [
-			'status' => true,
-			'response' => 'success'
+				'status' => true,
+				'response' => 'success like post '.$postid
 			];
 		}else{
 			return [
-			'status' => false,
-			'response' => $access['body']
+				'status' => false,
+				'response' => $access['body']
 			];
 		}
 

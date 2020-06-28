@@ -31,16 +31,64 @@ Class InstagramPostCommentsReplyRead
 
 		$access = InstagramHelper::curl($url, false , $headers, false, $useragent);
 
-		// echo $access['body'];
-		// exit;
-		
 		$response = json_decode($access['body'],true);
 
-		if ($response['status'] != 'ok') {
-			return false;
+		if ($response['status'] == 'ok' AND $response['data']['comment']['edge_threaded_comments']['edges'] != null) {		
+
+			$next_page = $response['data']['comment']['edge_threaded_comments']['page_info'];
+			if ($next_page['has_next_page']) {
+				$cursor = $next_page['end_cursor'];
+			}else{
+				$cursor = false;
+			}
+
+			return [
+				'status' => true,
+				'response' => $response,
+				'cursor' => $cursor
+			];
+
+		}else{
+
+			if ($response['status'] == 'ok') {
+
+				return [
+					'status' => false,
+					'response' => 'no_reply'
+				];
+			}
+
+			return [
+				'status' => false,
+				'response' => $access['body']
+			];
+		}
+	}
+
+	public function Extract($response){
+
+		if (!$response['status']) return $response;
+
+		$jsondata = $response['response'];
+		$edges = $jsondata['data']['comment']['edge_threaded_comments']['edges'];
+
+		$extract = array();
+		foreach ($edges as $node) {
+
+			$comment = $node['node'];
+			$user = $comment['owner'];
+			$haslike = $comment['viewer_has_liked'];
+
+			$extract[] = [
+				'id' => $comment['id'],
+				'text' => $comment['text'],
+				'userid' => $user['id'],
+				'username' => $user['username'],
+				'haslike' => $haslike
+			];
 		}
 
-		return $response;
+		return $extract;
 	}
 
 }

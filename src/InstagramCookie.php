@@ -1,8 +1,5 @@
 <?php namespace Riedayme\InstagramKit;
 
-/**
- * Handling Cookie
- */
 Class InstagramCookie
 {
 	public static function GetCSRFCookie($cookies){
@@ -24,7 +21,7 @@ Class InstagramCookie
 			$cookies.=$results[1][$o].";";
 		}
 
-		if (!$cookies) die("Cookie Tidak bisa diambil, kesalahan pada kode.");
+		if (!$cookies) die("[ERROR] Cookie Tidak ditemukan");
 
 		return $cookies;
 	}

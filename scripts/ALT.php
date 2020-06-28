@@ -1,7 +1,7 @@
 <?php  
 /**
 * Instagram Auto Like TimeLine
-* Last Update 21 Juni 2020
+* Last Update 28 Juni 2020
 * Author : Faanteyki
 */
 
@@ -15,6 +15,8 @@ use Riedayme\InstagramKit\InstagramPostLike;
 use Riedayme\InstagramKit\InstagramPostCommentsRead;
 use Riedayme\InstagramKit\InstagramPostCommentsReplyRead;
 use Riedayme\InstagramKit\InstagramPostCommentLike;
+
+date_default_timezone_set('Asia/Jakarta');
 
 Class InputHelper
 {
@@ -182,12 +184,31 @@ Class InstagramAutoLikeTIme
 		$FeedTimeLine = new InstagramFeedTimeLine();
 		$FeedTimeLine->SetCookie($this->cookie);
 
-		$results = $FeedTimeLine->GetFeedTimeLine([
-			'type' => 'graphql',
-			'deep' => 3
-			]);
+		$cursor = false;
+		$results = array();
+		$count = 0;
+		$limit = 1;
+		do {
 
-		if (!$results) return 'fail_get_feed';
+			$post = $FeedTimeLine->Process($cursor);
+
+			if (!$post['status']) {
+				return 'fail_get_feed';
+				break;
+			}
+
+			$data = $FeedTimeLine->Extract($post);
+
+			$results = array_merge($results,$data);
+
+			if ($post['cursor'] !== null) {
+				$cursor = $post['cursor'];
+			}else{
+				$cursor = false;
+			}
+
+			$count = $count+1;
+		} while ($cursor !== false AND $count < $limit);
 
 		return $results;
 	}
@@ -207,52 +228,80 @@ Class InstagramAutoLikeTIme
 
 		$readcomments = new InstagramPostCommentsRead();
 		$readcomments->SetCookie($this->cookie);
-		$results = $readcomments->Process($shortcode);
 
-		if (!$results) return false;
+		$cursor = false;
+		$resultscomments = array();
+		$count = 0;
+		$limit = 1;
+		do {
+
+			$post = $readcomments->Process($shortcode,$cursor);
+
+			if (!$post['status']) {
+				return false;
+				break;
+			}
+
+			$data = $readcomments->Extract($post);
+
+			$resultscomments = array_merge($resultscomments,$data);
+
+			if ($post['cursor'] !== null) {
+				$cursor = $post['cursor'];
+			}else{
+				$cursor = false;
+			}
+
+			$count = $count+1;
+		} while ($cursor !== false AND $count < $limit);
+
 
 		$readcomments_reply = new InstagramPostCommentsReplyRead();
 		$readcomments_reply->SetCookie($this->cookie);
 
 		$extract = array();
-		$edges = $results['data']['shortcode_media']['edge_media_to_parent_comment']['edges'];
-		foreach ($edges as $node) {
-
-			$comment = $node['node'];
-			$count_reply = $comment['edge_threaded_comments']['count'];
-			$user = $comment['owner'];
-			$haslike = $comment['viewer_has_liked'];
+		foreach ($resultscomments as $comment) {
 
 			/* skip if comment hasben liked */
-			if ($haslike == true) continue;
+			if ($comment['haslike'] == true AND $comment['count_reply'] < 1) continue;
 
-			$extract[] = [
-			'id' => $comment['id'],
-			'text' => $comment['text'],
-			'userid' => $user['id'],
-			'username' => $user['username'],
-			'haslike' => $haslike,
-			'count_reply' => $count_reply
-			];
+			$extract[] = $comment;
 
 			/* read reply comment */
-			if ($count_reply > 0) {
-				$results_reply = $readcomments_reply->Process($comment['id']);
+			if ($comment['count_reply'] > 0) {
 
-				$edges = $results_reply['data']['comment']['edge_threaded_comments']['edges'];
-				foreach ($edges as $node) {
+				$cursor = false;
+				$results_reply = array();
+				$count = 0;
+				$limit = 1;
+				do {
 
-					$comment = $node['node'];
-					$user = $comment['owner'];
-					$haslike = $comment['viewer_has_liked'];
+					$post = $readcomments_reply->Process($comment['id'],$cursor);
 
-					$extract[] = [
-					'id' => $comment['id'],
-					'text' => $comment['text'],
-					'userid' => $user['id'],
-					'username' => $user['username'],
-					'haslike' => $haslike
-					];
+					if (!$post['status']) {
+						echo $post['response'];
+						break;
+					}
+
+					$data = $readcomments_reply->Extract($post);
+
+					$results_reply = array_merge($results_reply,$data);
+
+					if ($post['cursor'] !== null) {
+						$cursor = $post['cursor'];
+					}else{
+						$cursor = false;
+					}
+
+					$count = $count+1;
+				} while ($cursor !== false AND $count < $limit);
+
+				foreach ($results_reply as $replycomment) {
+
+					/* skip if reply comment hasben liked */
+					if ($replycomment['haslike'] == true) continue;
+
+					$extract[] = $replycomment;
 				}
 			}
 
@@ -286,10 +335,10 @@ Class Worker
 			$account['password'] = InputHelper::GetInputPassword();
 		}
 
-		$delay_default = 10;
-		$delay = 10;
-		$delayfeed_default = 10;
-		$delayfeed = 10;
+		$delay_default = 30;
+		$delay = 30;
+		$delayfeed_default = 60;
+		$delayfeed = 60;
 
 		/* Call Class */
 		$Working = new InstagramAutoLikeTIme();
@@ -299,6 +348,7 @@ Class Worker
 
 		$nofeed = 0;
 		$likepost = 0;
+		$nogettimeline = 0;
 		while (true) {
 
 			/* when nofeed 5 reset sleep value to default */
@@ -307,23 +357,17 @@ Class Worker
 				$nofeed = 0;
 			}
 
+			/* when nogetstory 3 die because the cookie death */
+			if ($nogettimeline >= 3) die("[ERROR] cookie sudah mati");
+
 			echo "[INFO] Membaca Feed Timeline".PHP_EOL;
 
 			$FeedList = $Working->GetFeed();
 
-			if (!is_array($FeedList)) {
-
-				echo "[INFO] Tidak ditemukan Post, Coba lagi setelah {$delayfeed} detik".PHP_EOL;
-				sleep($delayfeed);
-
-				$delayfeed = $delayfeed*rand(2,3);
-				$nofeed++;
-
-				continue;
-			}else{				
-				$nogetfeed = 0; /* reset value */
-
-				echo "[INFO] Berhasil Mendapatkan Feed".PHP_EOL;
+			if ($FeedList == 'fail_get_feed') {
+				$nogettimeline++;
+			}else{
+				$nogettimeline = 0; /* reset value */
 			}
 
 			$temp_post_process = 0;
@@ -399,19 +443,17 @@ Class Worker
 					}
 				}
 
-				if ($temp_post_process < 1) 
-				{
-					echo "[INFO] Tidak ditemukan Post terbaru, Coba lagi setelah {$delayfeed} detik".PHP_EOL;
-					sleep($delayfeed);
+			}
 
-					$delayfeed = $delayfeed*rand(2,3);
-					$nofeed++;
+			if ($temp_post_process < 1) 
+			{
+				echo "[INFO] Tidak ditemukan Post terbaru, Coba lagi setelah {$delayfeed} detik".PHP_EOL;
+				sleep($delayfeed);
 
-					continue;
-				}
+				$delayfeed = $delayfeed*rand(2,3);
+				$nofeed++;
 
-
-
+				continue;
 			}
 
 		}		

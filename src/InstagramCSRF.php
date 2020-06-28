@@ -1,8 +1,5 @@
 <?php namespace Riedayme\InstagramKit;
 
-/**
- * Get CSRF Token
- */
 Class InstagramCSRF
 {
 

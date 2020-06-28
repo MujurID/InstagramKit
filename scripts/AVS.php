@@ -1,7 +1,7 @@
 <?php  
 /**
 * Instagram Auto View Story
-* Last Update 21 Juni 2020
+* Last Update 28 Juni 2020
 * Author : Faanteyki
 */
 require "../vendor/autoload.php";
@@ -9,7 +9,10 @@ require "../vendor/autoload.php";
 use Riedayme\InstagramKit\InstagramAuth;
 use Riedayme\InstagramKit\InstagramChecker;
 use Riedayme\InstagramKit\InstagramFeedStory;
+use Riedayme\InstagramKit\InstagramUserStory;
 use Riedayme\InstagramKit\InstagramSeenStory;
+
+date_default_timezone_set('Asia/Jakarta');
 
 Class InputHelper
 {
@@ -159,21 +162,33 @@ Class InstagramAutoViewStory
 	public function GetStory()
 	{
 
-		echo "[INFO] Membaca Feed ALl Story".PHP_EOL;
+		echo "[INFO] Membaca Feed Story".PHP_EOL;
 
-		$FeedStory = new InstagramFeedStory();
-		$FeedStory->SetCookie($this->cookie);
-		$StoryList = $FeedStory->GetStoryList();
-		
-		if (!$StoryList) return 'fail_get_all_story';
+		$feedstory = new InstagramFeedStory();
+		$feedstory->SetCookie($this->cookie);
+		$story = $feedstory->Process();
 
-		echo "[INFO] Membaca Feed Story User".PHP_EOL;
+		if (!$story['status']) {
+			return 'fail_get_feed_story';
+		}
 
-		$StoryUser = $FeedStory->GetStoryUser($StoryList);
+		$results = $feedstory->Extract($story);
 
-		if (!$StoryUser) return 'fail_get_story_user';
+		foreach ($results as $userdata) {
+			$user_ids[] = $userdata['id'];
+		}
 
-		echo "[INFO] Berhasil Mendapatkan Feed Story".PHP_EOL;
+		echo "[INFO] Membaca Story User".PHP_EOL;
+
+		$read = new InstagramUserStory();
+		$read->SetCookie($this->cookie);
+		$story = $read->Process($user_ids);
+
+		if (!$story['status']) {
+			return 'fail_get_story_user';
+		}
+
+		$StoryUser = $read->Extract($story);
 
 		return self::SyncStory($StoryUser);
 	}
@@ -188,6 +203,7 @@ Class InstagramAutoViewStory
 
 		if ($process['status'] != false) {
 			echo "[SUCCESS] Seen Story {$story['id']}".PHP_EOL;
+			echo "[INFO] Response : {$process['response']}".PHP_EOL;
 			self::SaveLog($this->username,$story['id']);
 		}else{
 			echo "[FAILED] Seen Story {$story['id']}".PHP_EOL;
@@ -260,10 +276,10 @@ Class Worker
 			$account['password'] = InputHelper::GetInputPassword();
 		}
 
-		$delay_default = 10;
-		$delay = 10;
-		$delaystory_default = 10;
-		$delaystory = 10;
+		$delay_default = 30;
+		$delay = 30;
+		$delaystory_default = 60;
+		$delaystory = 60;
 
 		/* Call Class */
 		$Working = new InstagramAutoViewStory();
@@ -271,7 +287,7 @@ Class Worker
 
 		$nostorystatus = 0;
 		$seenstory = 0;
-		$nogetfeed = 0;
+		$nogetstory = 0;
 		while (true) {
 
 			/* when nostorystatus 5 reset sleep value to default */
@@ -280,13 +296,15 @@ Class Worker
 				$nostorystatus = 0;
 			}
 
-			/* when nogetfeed 3 die because the cookie death */
-			if ($nogetfeed >= 3) die("cookie sudah mati");
+			/* when nogetstory 3 die because the cookie death */
+			if ($nogetstory >= 3) die("[ERROR] cookie sudah mati");
 
 			$StoryList = $Working->GetStory();
 
-			if ($StoryList == 'fail_get_all_story' OR $StoryList == 'fail_get_story_user') {
-				$nogetfeed++;
+			if ($StoryList == 'fail_get_feed_story' OR $StoryList == 'fail_get_story_user') {
+				$nogetstory++;
+			}else{
+				$nogetstory = 0; /* reset value */
 			}
 
 			if (empty($StoryList)) {

@@ -45,8 +45,8 @@ Class InstagramHelper
 			curl_close($ch);
 
 			return [
-			'header' => $header,
-			'body' => $body
+				'header' => $header,
+				'body' => $body
 			];
 		}
 	}	
@@ -85,6 +85,47 @@ Class InstagramHelper
 		$sleep = $dayinseconds/$limit;
 
 		return ceil($sleep);
+	}
+
+	/**
+	 * @param string $source (accepted jpg, gif & png filenames)
+	 * @param string $destination
+	 * @param int $quality [0-100]
+	 * @throws \Exception
+	 * https://stackoverflow.com/questions/14549446/how-can-i-convert-all-images-to-jpg
+	 */
+	public static function convertToJpeg($source, $destination, $quality = 100) {
+
+		if ($quality < 0 || $quality > 100) {
+			throw new \Exception("Param 'quality' out of range.");
+		}
+
+
+		if (!file_exists($source)) {
+			throw new \Exception("Image file not found.");
+		}
+
+		$ext = pathinfo($source, PATHINFO_EXTENSION);
+
+		if (preg_match('/jpg|jpeg/i', $ext)) {
+			$image = imagecreatefromjpeg($source);
+		} else if (preg_match('/png/i', $ext)) {
+			$image = imagecreatefrompng($source);
+		} else if (preg_match('/gif/i', $ext)) {
+			$image = imagecreatefromgif($source);
+		} else {
+			throw new \Exception("Image isn't recognized.");
+		}
+
+		$result = imagejpeg($image, $destination, $quality);
+
+		if (!$result) {
+			throw new \Exception("Saving to file exception.");
+		}
+
+		imagedestroy($image);
+
+		return $destination;
 	}
 
 }

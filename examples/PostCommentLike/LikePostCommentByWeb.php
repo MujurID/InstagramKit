@@ -5,7 +5,7 @@ use Riedayme\InstagramKit\InstagramPostCommentLike;
 
 $datacookie = 'yourcookie';
 
-$commentid = '17857683010999361';
+$commentid = '17893046791541968'; // riedayme post > comment : hehe
 
 $likecomment = new InstagramPostCommentLike();
 $likecomment->SetCookie($datacookie);
@@ -20,7 +20,7 @@ echo "</pre>";
 array(2) {
   ["status"]=>
   bool(true)
-  ["id"]=>
-  string(19) "2332344911195799233"
+  ["response"]=>
+  string(38) "success like comment 17893046791541968"
 }
 */

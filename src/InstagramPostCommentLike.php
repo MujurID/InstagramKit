@@ -29,7 +29,7 @@ Class InstagramPostCommentLike
 		if ($response['status'] == 'ok') {
 			return [
 			'status' => true,
-			'id' => $commentid
+			'response' => 'success like comment '.$commentid
 			];
 		}else{
 			return [

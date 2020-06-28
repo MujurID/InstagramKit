@@ -31,14 +31,13 @@ Class InstagramSeenStory
 
 		if ($response['status'] == 'ok') {
 			return [
-			'status' => true,
-			'id' => $postdata['id'],
-			'username' => $postdata['username']
+				'status' => true,
+				'response' => 'success seen story '.$postdata['id']
 			];
 		}else{
 			return [
-			'status' => false,
-			'response' => $access['body']
+				'status' => false,
+				'response' => $access['body']
 			];
 		}
 	}		

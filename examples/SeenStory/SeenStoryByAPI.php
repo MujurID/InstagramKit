@@ -4,7 +4,7 @@ require "../../vendor/autoload.php";
 use Riedayme\InstagramKit\InstagramFeedStoryAPI;
 use Riedayme\InstagramKit\InstagramSeenStoryAPI;
 
-$datacookie = 'csrftoken=774rNGrfgv6ar6CinLorwvzAOXKGAy5F;rur=ASH;ds_user_id=31310607724;urlgen=\"{\\\"180.244.234.177\\\": 7713}:1jmq6F:Ebmk4cYBCu3rpLqHxJNA4uFCBUI\";sessionid=31310607724%3AD3BnzqxHNaIDKz%3A22;';
+$datacookie = 'yourcookie';
 
 $user_ids = ['13320596140'];
 
