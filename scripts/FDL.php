@@ -179,7 +179,7 @@ Class InstagramFollowDMLike
 
 	public $count_process = 0;
 
-	public $delay_bot = 15;
+	public $delay_bot = 60;
 	public $delay_bot_default = 60;
 	public $delay_bot_count = 0;
 
@@ -546,16 +546,18 @@ Class InstagramFollowDMLike
 				echo "[INFO] Delay {$delay}".PHP_EOL;
 				sleep($delay);
 				$delay = $delay+5;
+
+				$current++;
+				
 			}else{
 				echo "[".date('d-m-Y H:i:s')."] Gagal Like post {$post['url']}".PHP_EOL;
 				echo "[INFO] Response : {$results['response']}".PHP_EOL;
 			}
 
-			if ($current > $limit) {
+			if ($current == $limit) {
 				break;
 			}
 
-			$current++;
 		}
 
 	}	

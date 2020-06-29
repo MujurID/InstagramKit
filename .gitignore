@@ -7,3 +7,5 @@ composer.lock
 # Log
 scripts/data/*
 !scripts/data/index.html
+scripts/log/*
+!scripts/log/index.html
